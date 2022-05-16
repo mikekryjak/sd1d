@@ -2,8 +2,10 @@ Modified SD1D
 ====
 This is a modified version of SD1D to include:
 - SOLPS AMJUEL ionisation, excitation rates
-- SOLKiT charge exchange and neutral diffusion models
-- New input file option switches for the above
+
+This version has been tested to work and was originally named SD1D-8 or "SD8"
+It is the starting point for new changes on Git to include CX/Dn and others
+
 
 This originally came from SD1D branch hash 2f3da94 on master
 

@@ -141,8 +141,6 @@ protected:
     OPTION(opt, elastic_scattering,
            false);                  // Include ion-neutral elastic scattering?
     OPTION(opt, excitation, false); // Include electron impact excitation?
-	OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
-	OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
 
     OPTION(opt, gamma_sound, 5. / 3); // Ratio of specific heats
     bndry_flux_fix =
@@ -543,22 +541,9 @@ protected:
             for (int k = 0; k < mesh->LocalNz; k++) {
               // Charge exchange frequency, normalised to ion cyclotron
               // frequency
-			  
-			  // Initialise outside of the if statement
-			  // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
-			  BoutReal sigma_cx;
-			  
-			  if (cx_model=="solkit") {
-				  
-				  sigma_cx = Nelim(i, j, k) * Nnorm *
-									  (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) * Tnorm /
-									  Omega_ci;
-			  } else {
-				  
-				  sigma_cx = Nelim(i, j, k) * Nnorm *
-									  hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
-									  Omega_ci;
-			  }
+              BoutReal sigma_cx = Nelim(i, j, k) * Nnorm *
+                                  hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
+                                  Omega_ci;
 
               // Ionisation frequency
               BoutReal sigma_iz = Nelim(i, j, k) * Nnorm *
@@ -589,13 +574,8 @@ protected:
 
               // Neutral gas diffusion
               if (include_dneut) {
-				  
-				if (dn_model=="solkit") {
-					
-					Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
-				} else {
-					Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
-				}
+                Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
+
                 // Neutral gas heat conduction
                 kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
               }
@@ -995,37 +975,18 @@ protected:
 
             ///////////////////////////////////////
             // Charge exchange
-			
-			// These need initialisation outside of the if statements
-			BoutReal R_cx_L, R_cx_C, R_cx_R;
-			
+
             if (charge_exchange) {
-				
-				// SOLKIT MODEL (MK 12/05/2022)
-				// CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
-				if (cx_model == "solkit") {
-					R_cx_L = Ne_L * Nn_L *
-                                3e-19 * Vi_L *
+              BoutReal R_cx_L = Ne_L * Nn_L *
+                                hydrogen.chargeExchange(Te_L * Tnorm) *
                                 (Nnorm / Omega_ci);
-					R_cx_C = Ne_C * Nn_C *
-                                3e-19 * Vi_C *
+              BoutReal R_cx_C = Ne_C * Nn_C *
+                                hydrogen.chargeExchange(Te_C * Tnorm) *
                                 (Nnorm / Omega_ci);
-					R_cx_R = Ne_R * Nn_R *
-                                3e-19 * Vi_R *
+              BoutReal R_cx_R = Ne_R * Nn_R *
+                                hydrogen.chargeExchange(Te_R * Tnorm) *
                                 (Nnorm / Omega_ci);
-				} else {
-				// ORIGINAL MODEL 
-					R_cx_L = Ne_L * Nn_L *
-									hydrogen.chargeExchange(Te_L * Tnorm) *
-									(Nnorm / Omega_ci);
-					R_cx_C = Ne_C * Nn_C *
-									hydrogen.chargeExchange(Te_C * Tnorm) *
-									(Nnorm / Omega_ci);
-					R_cx_R = Ne_R * Nn_R *
-									hydrogen.chargeExchange(Te_R * Tnorm) *
-									(Nnorm / Omega_ci);
-				}
-			
+
               // Ecx is energy transferred to neutrals
               Ecx(i, j, k) = (3. / 2) *
                              (J_L * (Te_L - Tn_L) * R_cx_L +
@@ -1837,8 +1798,6 @@ protected:
   }
 
 private:
-  std::string dn_model;
-  std::string cx_model;
   bool cfl_info; // Print additional information on CFL limits
 
   // Normalisation parameters
