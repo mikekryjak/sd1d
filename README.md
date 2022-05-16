@@ -1,3 +1,17 @@
+Modified SD1D
+====
+This is a modified version of SD1D to include:
+- SOLPS AMJUEL ionisation, excitation rates
+- SOLKiT charge exchange and neutral diffusion models
+- New input file option switches for the above
+
+This originally came from SD1D branch hash 2f3da94 on master
+
+
+
+Original SD1D readme is below
+
+
 
 SD1D
 ====
