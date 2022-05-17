@@ -147,13 +147,13 @@ protected:
         opt["bndry_flux_fix"]
             .doc("Calculate boundary fluxes using simple mid-point (recommended)")
             .withDefault<bool>(true);
-						
-		// MK ADDITIONS
-		OPTION(opt, iz_rate, "default"); // Set to "SOLPS" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
-		OPTION(opt, ex_rate, "default"); // Set to "SOLPS" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
-		OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
-		OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
-		OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
+            
+    // MK ADDITIONS
+    OPTION(opt, iz_rate, "default"); // Set to "SOLPS" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, ex_rate, "default"); // Set to "SOLPS" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
+    OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
+    OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
 
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -305,7 +305,7 @@ protected:
                                  // power, energy transfer, friction
       SAVE_REPEAT2(Dn, kappa_n); // Neutral diffusion coefficients
       if (mesh->lastY()){        // only dump where we set the value
-				SAVE_REPEAT(flux_ion);   // Flux of ions to target
+        SAVE_REPEAT(flux_ion);   // Flux of ions to target
       }
     }
     if (heat_conduction) {
@@ -341,9 +341,9 @@ protected:
         }
 
         /// Rate diagnostics
-		if (atomic_debug) {
+    if (atomic_debug) {
         SAVE_REPEAT2(Siz_compare, Rex_compare);
-		}
+    }
       }
 
       SAVE_REPEAT(Vi);
@@ -550,22 +550,22 @@ protected:
             for (int k = 0; k < mesh->LocalNz; k++) {
               // Charge exchange frequency, normalised to ion cyclotron
               // frequency
-			  
-			  // Initialise outside of the if statement
-			  // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
-			  BoutReal sigma_cx;
-			  
-			  if (cx_model=="solkit") {
-				  
-				  sigma_cx = Nelim(i, j, k) * Nnorm *
-									  (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) * Tnorm /
-									  Omega_ci;
-			  } else {
-				  
-				  sigma_cx = Nelim(i, j, k) * Nnorm *
-									  hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
-									  Omega_ci;
-			  }
+        
+        // Initialise outside of the if statement
+        // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
+        BoutReal sigma_cx;
+        
+        if (cx_model=="solkit") {
+          
+          sigma_cx = Nelim(i, j, k) * Nnorm *
+                    (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) * Tnorm /
+                    Omega_ci;
+        } else {
+          
+          sigma_cx = Nelim(i, j, k) * Nnorm *
+                    hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
+                    Omega_ci;
+        }
 
               // Ionisation frequency
               BoutReal sigma_iz = Nelim(i, j, k) * Nnorm *
@@ -596,15 +596,15 @@ protected:
 
               // Neutral gas diffusion
               if (include_dneut) {
-				  
-								if (dn_model=="solkit") {
-									
-									Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
-								} else {
-									Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
-								}
-												// Neutral gas heat conduction
-												kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
+          
+                if (dn_model=="solkit") {
+                  
+                  Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                } else {
+                  Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
+                }
+                        // Neutral gas heat conduction
+                        kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
               }
             }
 
@@ -1002,37 +1002,37 @@ protected:
 
             ///////////////////////////////////////
             // Charge exchange
-			
-			// These need initialisation outside of the if statements
-			BoutReal R_cx_L, R_cx_C, R_cx_R;
-			
+      
+      // These need initialisation outside of the if statements
+      BoutReal R_cx_L, R_cx_C, R_cx_R;
+      
             if (charge_exchange) {
-				
-							// SOLKIT MODEL (MK 12/05/2022)
-							// CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
-							if (cx_model == "solkit") {
-								R_cx_L = Ne_L * Nn_L *
-																			3e-19 * Vi_L *
-																			(Nnorm / Omega_ci);
-								R_cx_C = Ne_C * Nn_C *
-																			3e-19 * Vi_C *
-																			(Nnorm / Omega_ci);
-								R_cx_R = Ne_R * Nn_R *
-																			3e-19 * Vi_R *
-																			(Nnorm / Omega_ci);
-							} else {
-							// ORIGINAL MODEL 
-								R_cx_L = Ne_L * Nn_L *
-												hydrogen.chargeExchange(Te_L * Tnorm) *
-												(Nnorm / Omega_ci);
-								R_cx_C = Ne_C * Nn_C *
-												hydrogen.chargeExchange(Te_C * Tnorm) *
-												(Nnorm / Omega_ci);
-								R_cx_R = Ne_R * Nn_R *
-												hydrogen.chargeExchange(Te_R * Tnorm) *
-												(Nnorm / Omega_ci);
-							}
-			
+        
+              // SOLKIT MODEL (MK 12/05/2022)
+              // CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
+              if (cx_model == "solkit") {
+                R_cx_L = Ne_L * Nn_L *
+                                      3e-19 * Vi_L *
+                                      (Nnorm / Omega_ci);
+                R_cx_C = Ne_C * Nn_C *
+                                      3e-19 * Vi_C *
+                                      (Nnorm / Omega_ci);
+                R_cx_R = Ne_R * Nn_R *
+                                      3e-19 * Vi_R *
+                                      (Nnorm / Omega_ci);
+              } else {
+              // ORIGINAL MODEL 
+                R_cx_L = Ne_L * Nn_L *
+                        hydrogen.chargeExchange(Te_L * Tnorm) *
+                        (Nnorm / Omega_ci);
+                R_cx_C = Ne_C * Nn_C *
+                        hydrogen.chargeExchange(Te_C * Tnorm) *
+                        (Nnorm / Omega_ci);
+                R_cx_R = Ne_R * Nn_R *
+                        hydrogen.chargeExchange(Te_R * Tnorm) *
+                        (Nnorm / Omega_ci);
+              }
+      
               // Ecx is energy transferred to neutrals
               Ecx(i, j, k) = (3. / 2) *
                              (J_L * (Te_L - Tn_L) * R_cx_L +
@@ -1100,36 +1100,36 @@ protected:
             // Ionisation
 
             if (ionisation) {
-							BoutReal R_iz_L, R_iz_C, R_iz_R;
-						
-							if (iz_rate=="solps") {
-								R_iz_L = Ne_L * Nn_L *
-																	hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
-																	Omega_ci;
-								R_iz_C = Ne_C * Nn_C *
-																	hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-																	Omega_ci;
-								R_iz_R = Ne_R * Nn_R *
-																	hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-																	Omega_ci;
-							} else {
-								R_iz_L = Ne_L * Nn_L *
+              BoutReal R_iz_L, R_iz_C, R_iz_R;
+            
+              if (iz_rate=="solps") {
+                R_iz_L = Ne_L * Nn_L *
+                                  hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
+                                  Omega_ci;
+                R_iz_C = Ne_C * Nn_C *
+                                  hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
+                                  Omega_ci;
+                R_iz_R = Ne_R * Nn_R *
+                                  hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
+                                  Omega_ci;
+              } else {
+                R_iz_L = Ne_L * Nn_L *
                                 hydrogen.ionisation_old(Te_L * Tnorm) * Nnorm /
                                 Omega_ci;
-								R_iz_C = Ne_C * Nn_C *
-																	hydrogen.ionisation_old(Te_C * Tnorm) * Nnorm /
-																	Omega_ci;
-								R_iz_R = Ne_R * Nn_R *
-																	hydrogen.ionisation_old(Te_R * Tnorm) * Nnorm /
-																	Omega_ci;
-							}
+                R_iz_C = Ne_C * Nn_C *
+                                  hydrogen.ionisation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci;
+                R_iz_R = Ne_R * Nn_R *
+                                  hydrogen.ionisation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci;
+              }
 
               Riz(i, j, k) =
                   (Eionize / Tnorm) *
                   ( // Energy loss per ionisation
                       J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
                   (6. * J_C);
-									
+                  
               Eiz(i, j, k) =
                   -(3. / 2) *
                   ( // Energy from neutral atom temperature
@@ -1146,25 +1146,25 @@ protected:
               Siz(i, j, k) =
                   -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
                   (6. * J_C);
-			  
-							if (atomic_debug) {
-								// Rate diagnostics
-								// Calculate field Siz_compare which is saved but doesn't go into other calculations
-								R_iz_L = Ne_L * Nn_L *
-								hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
-								Omega_ci;
-								R_iz_C = Ne_C * Nn_C *
-								hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-								Omega_ci;
-								R_iz_R = Ne_R * Nn_R *
-								hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-								Omega_ci;
+        
+              if (atomic_debug) {
+                // Rate diagnostics
+                // Calculate field Siz_compare which is saved but doesn't go into other calculations
+                R_iz_L = Ne_L * Nn_L *
+                hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
+                Omega_ci;
+                R_iz_C = Ne_C * Nn_C *
+                hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
+                Omega_ci;
+                R_iz_R = Ne_R * Nn_R *
+                hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
+                Omega_ci;
 
-								Siz_compare(i, j, k) =
-								-(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
-								(6. * J_C);
-							}
-						}
+                Siz_compare(i, j, k) =
+                -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
+                (6. * J_C);
+              }
+            }
 
             if (elastic_scattering) {
               /////////////////////////////////////////////////////////
@@ -1209,54 +1209,54 @@ protected:
               // Currently assuming that quantity calculated is in [eV m^3/s]
               // MK modified this to calculate net excitation rate from AMJUEL 
               // effective excitation energy rate minus base ionisation energy cost 13.6eV * fION  
-							BoutReal R_ex_L, R_ex_C, R_ex_R;
-							
-							if (ex_rate=="solps") {
-								R_ex_L = Ne_L * Nn_L *
-																	(hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_C = Ne_C * Nn_C *
-																	(hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_R = Ne_R * Nn_R *
-																	(hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6) * Nnorm /
-																	Omega_ci / Tnorm;
-									
-								Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-															 (6. * J_C);
-							} else {
-								// Calculate the old way for comparison
-								R_ex_L = Ne_L * Nn_L *
-																	hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_C = Ne_C * Nn_C *
-																	hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_R = Ne_R * Nn_R *
-																	hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								
-							
-								Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-															 (6. * J_C);
-							}
-														 
-							if (atomic_debug) {							 
-								// Calculate the old way for comparison
-								R_ex_L = Ne_L * Nn_L *
-																	hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_C = Ne_C * Nn_C *
-																	hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								R_ex_R = Ne_R * Nn_R *
-																	hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
-																	Omega_ci / Tnorm;
-								
-							
-								Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-															 (6. * J_C);
-							}
+              BoutReal R_ex_L, R_ex_C, R_ex_R;
+
+              if (ex_rate=="solps") {
+                R_ex_L = Ne_L * Nn_L *
+                                  (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_C = Ne_C * Nn_C *
+                                  (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_R = Ne_R * Nn_R *
+                                  (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6) * Nnorm /
+                                  Omega_ci / Tnorm;
+
+                Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
+              } else {
+                // Calculate the old way for comparison
+                R_ex_L = Ne_L * Nn_L *
+                                  hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_C = Ne_C * Nn_C *
+                                  hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_R = Ne_R * Nn_R *
+                                  hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                
+              
+                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
+              }
+                             
+              if (atomic_debug) {							 
+                // Calculate the old way for comparison
+                R_ex_L = Ne_L * Nn_L *
+                                  hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_C = Ne_C * Nn_C *
+                                  hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_R = Ne_R * Nn_R *
+                                  hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                
+              
+                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
+              }
             }
 
             // Total energy lost from system
