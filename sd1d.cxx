@@ -1208,13 +1208,13 @@ protected:
 							if (atomic_debug) {							 
 								// Calculate the old way for comparison
 								R_ex_L = Ne_L * Nn_L *
-																	(hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+																	hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
 																	Omega_ci / Tnorm;
 								R_ex_C = Ne_C * Nn_C *
-																	(hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+																	hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
 																	Omega_ci / Tnorm;
 								R_ex_R = Ne_R * Nn_R *
-																	(hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+																	hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
 																	Omega_ci / Tnorm;
 								
 							
@@ -1850,7 +1850,7 @@ private:
   // MK additions. See OPTIONS for descriptions
   std::string dn_model;
   std::string cx_model;
-  bool atomic_debug
+  bool atomic_debug;
   
   bool cfl_info; // Print additional information on CFL limits
 
