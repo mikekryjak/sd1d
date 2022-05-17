@@ -528,33 +528,6 @@ BoutReal UpdatedRadiatedPower::ionisation(BoutReal n, BoutReal T) {
   return fION;
 }
 
-// Collision rate coefficient <sigma*v> [m3/s]
-// COMES FROM AMJUEL H.4 2.1.5 (SAWADA) E-index 0 (no density dependence, i.e. coronal approximation)
-BoutReal UpdatedRadiatedPower::ionisation_coronal(BoutReal T) {
-    double fION; // Rate coefficient
-    double TT;
-
-    if (T < 0.025) {
-      T = 0.025; // 300K
-    }
-    
-    TT = T;
-	
-    double ioncoeffs[9] = {-3.248025330340E+01, 1.425332391510E+01, -6.632235026785E+00, \
-			   1.425332391510E+01, -6.632235026785E+00, 2.059544135448E+00, \
-			   -6.632235026785E+00, 2.059544135448E+00, -4.425370331410E-01};
-    
-    double lograte = 0.0;
-    for (int i=0;i<=8;i++)
-      {
-	lograte = lograte + ioncoeffs[i]*pow(log(TT),i);
-      }
-
-    fION = exp(lograte)*1.0E-6;
-
-    return fION;
-}
-
 // COMES FROM AMJUEL H.10 2.1.5 (SAWADA)
 // This is an energy weighted rate (m-3s-1eV) for energy loss due to multistep ionisation in a 9 coefficient 2D polynomial fit
 // It includes energy loss due to ionisation (i.e. 13.6eV) within it, so for SD1D's definition we need to separate this out later
