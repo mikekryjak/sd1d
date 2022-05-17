@@ -60,7 +60,9 @@ public:
   BoutReal power(BoutReal Te, BoutReal ne, BoutReal ni);  
 
   // Ionisation rate coefficient <sigma*v> [m3/s]
-  BoutReal ionisation(BoutReal T); 
+  BoutReal ionisation(BoutReal Ne, BoutReal T); 
+  BoutReal ionisation_coronal(BoutReal T);
+  BoutReal ionisation_old(BoutReal T);
   
   // Recombination rate coefficient <sigma*v> [m3/s]
   BoutReal recombination(BoutReal n, BoutReal T);
@@ -68,7 +70,8 @@ public:
   // Charge exchange rate coefficient <sigma*v> [m3/s]
   BoutReal chargeExchange(BoutReal Te);
   
-  BoutReal excitation(BoutReal Te);
+  BoutReal excitation(BoutReal Ne, BoutReal Te);
+  BoutReal excitation_old(BoutReal Te);
 private:
   
 };

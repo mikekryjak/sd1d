@@ -13,16 +13,16 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Update submodules
 # Adapted from https://cliutils.gitlab.io/modern-cmake/chapters/projects/submodule.html
-find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-  message(STATUS "Submodule update")
-  execute_process(COMMAND ${GIT_EXECUTABLE} -c submodule.recurse=false submodule update --init --recursive
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE GIT_SUBMOD_RESULT)
-  if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-    message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-  endif()
-endif()
+#find_package(Git QUIET)
+#if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+#  message(STATUS "Submodule update")
+#  execute_process(COMMAND ${GIT_EXECUTABLE} -c submodule.recurse=false submodule update --init --recursive
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#    RESULT_VARIABLE GIT_SUBMOD_RESULT)
+#  if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+#    message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+#  endif()
+#endif()
 
 # Get the Git revision
 include(GetGitRevisionDescription)
@@ -34,7 +34,8 @@ message(STATUS "Git revision: ${SD1D_REVISION}")
 
 # BOUT++ is a dependency
 set(BOUT_BUILD_EXAMPLES, OFF) # Don't create example makefiles
-add_subdirectory(external/BOUT-dev)
+#add_subdirectory(external/BOUT-dev)
+find_package(bout++ REQUIRED)
 
 set(SD1D_SOURCES
     sd1d.cxx

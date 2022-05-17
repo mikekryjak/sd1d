@@ -201,31 +201,6 @@ BoutReal UpdatedRadiatedPower::power(BoutReal Te, BoutReal ne, BoutReal ni) {
   throw BoutException("UpdatedRadiatedPower::power not implemented");
 }
 
-// Collision rate coefficient <sigma*v> [m3/s]
-BoutReal UpdatedRadiatedPower::ionisation(BoutReal T) {
-    double fION; // Rate coefficient
-    double TT;
-
-    if (T < 0.025) {
-      T = 0.025; // 300K
-    }
-    
-    TT = T;
-
-    double ioncoeffs[9] = {-3.271397E1, 1.353656E1, -5.739329, 1.563155, \
-			   -2.877056E-1, 3.482560e-2, -2.631976E-3, \
-			   1.119544E-4, -2.039150E-6};
-    
-    double lograte = 0.0;
-    for (int i=0;i<=8;i++)
-      {
-	lograte = lograte + ioncoeffs[i]*pow(log(TT),i);
-      }
-
-    fION = exp(lograte)*1.0E-6;
-
-    return fION;
-}
 
 //<sigma*v> [m3/s]
 BoutReal UpdatedRadiatedPower::recombination(BoutReal n, BoutReal T) {
@@ -391,7 +366,22 @@ BoutReal UpdatedRadiatedPower::chargeExchange(BoutReal T) {
 }
 
 // <sigma*v> [m3/s]
-BoutReal UpdatedRadiatedPower::excitation(BoutReal Te) {
+// ORIGINAL FUNCTION
+//BoutReal UpdatedRadiatedPower::excitation(BoutReal Te) {
+//  double fEXC;	//<sigma*v> [m3/s]
+//  double TT,Y;
+//  
+//  TT=Te;
+//  
+//  if (TT<1.0) TT=1.0;
+//  Y=10.2/TT;
+//  fEXC=49.0E-14/(0.28+Y)*exp(-Y)*sqrt(Y*(1.0+Y));
+//  
+//  return fEXC;
+//}
+
+// MANUALLY FIT BY MK TO MATCH STEFAN MIJIN THESIS E_iz (SOLKIT)
+BoutReal UpdatedRadiatedPower::excitation_old(BoutReal Te) {
   double fEXC;	//<sigma*v> [m3/s]
   double TT,Y;
   
@@ -399,8 +389,274 @@ BoutReal UpdatedRadiatedPower::excitation(BoutReal Te) {
   
   if (TT<1.0) TT=1.0;
   Y=10.2/TT;
+  fEXC=1E-13*5.27370587/(1.14166254+Y)*exp(-Y*1.24326264);
   
-  fEXC=49.0E-14/(0.28+Y)*exp(-Y)*sqrt(Y*(1.0+Y));
+  return fEXC;
+}
+
+
+// Collision rate coefficient <sigma*v> [m3/s]
+BoutReal UpdatedRadiatedPower::ionisation_old(BoutReal T) {
+    double fION; // Rate coefficient
+    double TT;
+
+    if (T < 0.025) {
+      T = 0.025; // 300K
+    }
+    
+    TT = T;
+	
+// ORIGINAL SD1D RATE
+    double ioncoeffs[9] = {-3.271397E1, 1.353656E1, -5.739329, 1.563155, \
+			   -2.877056E-1, 3.482560e-2, -2.631976E-3, \
+			   1.119544E-4, -2.039150E-6};
+    
+    double lograte = 0.0;
+    for (int i=0;i<=8;i++)
+      {
+	lograte = lograte + ioncoeffs[i]*pow(log(TT),i);
+      }
+
+    fION = exp(lograte)*1.0E-6;
+
+    return fION;
+}
+
+// <sigma*v> [m3/s]
+// COMES FROM AMJUEL H.4 2.1.5 (SAWADA)
+BoutReal UpdatedRadiatedPower::ionisation(BoutReal n, BoutReal T) {
+  // double TT, RDNE, RTE, DNE, E, RN, RT, RNJ, RTI, suma, fION;
+  // int i, j, i1, j1;
   
+  double E, suma, fION;
+  int i, j;
+
+  if (n < 1e3) // Log(n) used, so prevent NaNs
+    return 0.0;
+
+  if (T < 0.025) {
+    T = 0.025; // 300K
+  }
+
+  double MATA[9][9] = {
+      {
+          -3.248025330340E+01, 1.425332391510E+01, -6.632235026785E+00,
+          2.059544135448E+00, -4.425370331410E-01, 6.309381861496E-02,
+          -5.620091829261E-03, 2.812016578355E-04, -6.011143453374E-06,
+      },
+      {
+          -5.440669186583E-02, -3.594347160760E-02, 9.255558353174E-02,
+          -7.562462086943E-02, 2.882634019199E-02, -5.788686535780E-03,
+          6.329105568040E-04, -3.564132950345E-05, 8.089651265488E-07,
+      },
+      {
+          9.048888225109E-02, -2.014729121556E-02, -5.580210154625E-03,
+          1.519595967433E-02, -7.285771485050E-03, 1.507382955250E-03,
+          -1.527777697951E-04, 7.222726811078E-06, -1.186212683668E-07,
+      },
+      {
+          -4.054078993576E-02, 1.039773615730E-02, -5.902218748238E-03,
+          5.803498098354E-04, 4.643389885987E-04, -1.201550548662E-04,
+          8.270124691336E-06, 1.433018694347E-07, -2.381080756307E-08,
+      },
+      {
+          8.976513750477E-03, -1.771792153042E-03, 1.295609806553E-03,
+          -3.527285012725E-04, 1.145700685235E-06, 6.574487543511E-06,
+          3.224101773605E-08, -1.097431215601E-07, 6.271173694534E-09,
+      },
+      {
+          -1.060334011186E-03, 1.237467264294E-04, -1.056721622588E-04,
+          3.201533740322E-05, 8.493662724988E-07, -9.678782818849E-07,
+          4.377402649057E-08, 7.789031791949E-09, -5.483010244930E-10,
+      },
+      {
+          6.846238436472E-05, -3.130184159149E-06, 4.646310029498E-06,
+          -1.835196889733E-06, -1.001032516512E-08, 5.176265845225E-08,
+          -2.622921686955E-09, -4.197728680251E-10, 3.064611702159E-11,
+      },
+      {
+          -2.242955329604E-06, -3.051994601527E-08, -1.479612391848E-07,
+          9.474014343303E-08, -1.476839184318E-08, 1.291551676860E-09,
+          -2.259663431436E-10, 3.032260338723E-11, -1.355903284487E-12,
+      },
+      {
+          2.890437688072E-08, 1.888148175469E-09, 2.852251258320E-09,
+          -2.342505583774E-09, 6.047700368169E-10, -9.685157340473E-11,
+          1.161438990709E-11, -8.911076930014E-13, 2.935080031599E-14,
+      },
+  };
+
+  // RDNE = n;
+  // RTE = T;
+
+  // DNE = RDNE;
+  // TT = RTE;
+  // E = DNE * 1.0E-14;
+
+  // RN = log(E);
+  // RT = log(TT);
+
+  // suma = 0.0;
+  // for (i = 1; i <= 9; i++) {
+    // i1 = i - 1;
+    // for (j = 1; j <= 9; j++) {
+      // j1 = j - 1;
+      // RNJ = pow(RN, j1);
+      // if ((RN == 0.0) && (j1 == 0))
+        // RNJ = 1.0;
+      // RTI = pow(RT, i1);
+      // if ((RT == 0.0) && (i1 == 0))
+        // RTI = 1.0;
+      // suma = suma + MATA[j - 1][i - 1] * RNJ * RTI;
+    // }
+  // }
+  
+  E = n * 1.0E-14;
+  E = log(E);
+  T = log(T);
+  
+  suma = 0.0;
+  
+  for (i = 0; i <=8; i++) {
+	  for (j = 0; j <= 8; j++) {
+		  suma = suma + MATA[j][i] * pow(E,j) * pow(T,i);
+	  }
+  }
+
+  fION = exp(suma)*1.0E-6;
+
+  return fION;
+}
+
+// Collision rate coefficient <sigma*v> [m3/s]
+// COMES FROM AMJUEL H.4 2.1.5 (SAWADA) E-index 0 (no density dependence, i.e. coronal approximation)
+BoutReal UpdatedRadiatedPower::ionisation_coronal(BoutReal T) {
+    double fION; // Rate coefficient
+    double TT;
+
+    if (T < 0.025) {
+      T = 0.025; // 300K
+    }
+    
+    TT = T;
+	
+    double ioncoeffs[9] = {-3.248025330340E+01, 1.425332391510E+01, -6.632235026785E+00, \
+			   1.425332391510E+01, -6.632235026785E+00, 2.059544135448E+00, \
+			   -6.632235026785E+00, 2.059544135448E+00, -4.425370331410E-01};
+    
+    double lograte = 0.0;
+    for (int i=0;i<=8;i++)
+      {
+	lograte = lograte + ioncoeffs[i]*pow(log(TT),i);
+      }
+
+    fION = exp(lograte)*1.0E-6;
+
+    return fION;
+}
+
+// COMES FROM AMJUEL H.10 2.1.5 (SAWADA)
+// This is an energy weighted rate (m-3s-1eV) for energy loss due to multistep ionisation in a 9 coefficient 2D polynomial fit
+// It includes energy loss due to ionisation (i.e. 13.6eV) within it, so for SD1D's definition we need to separate this out later
+// this is done in sd1d.cxx
+BoutReal UpdatedRadiatedPower::excitation(BoutReal n, BoutReal T) {
+  double E, suma, fEXC;
+  int i, j;
+
+  if (n < 1e3) // Log(n) used, so prevent NaNs
+    return 0.0;
+
+  if (T < 0.025) {
+    T = 0.025; // 300K
+  }
+
+  double MATA[9][9] = {
+      {
+          -2.497580168306E+01, 1.004448839974E+01, -4.867952931298E+00,
+          1.689422238067E+00, -4.103532320100E-01, 6.469718387357E-02,
+          -6.215861314764E-03, 3.289809895460E-04, -7.335808238917E-06,
+      },
+      {
+          1.081653961822E-03, -3.189474633369E-03, -5.852267850690E-03,
+          7.744372210287E-03, -3.622291213236E-03, 8.268567898126E-04,
+          -9.836595524255E-05, 5.845697922558E-06, -1.367574486885E-07,
+      },
+      {
+          -7.358936044605E-04, 2.510128351932E-03, 2.867458651322E-03,
+          -3.087364236497E-03, 1.327415215304E-03, -2.830939623802E-04,
+          3.017296919092E-05, -1.479323780613E-06, 2.423236476442E-08,
+      },
+      {
+          4.122398646951E-04, -7.707040988954E-04, -8.328668093987E-04,
+          4.707676288420E-04, -1.424078519508E-04, 2.411848024960E-05,
+          -1.474253805845E-06, -4.633029022577E-08, 5.733871119707E-09,
+      },
+      {
+          -1.408153300988E-04, 1.031309578578E-04, 2.056134355492E-04,
+          -5.508611815406E-05, 3.307339563081E-06, 5.707984861100E-07,
+          -2.397868837417E-07, 3.337390374041E-08, -1.512777532459E-09,
+      },
+      {
+          2.469730836220E-05, -3.716939423005E-06, -3.301570807523E-05,
+          7.305867762241E-06, 5.256679519499E-09, -1.016945693300E-07,
+          1.518743025531E-08, -1.770252084837E-09, 8.733801272834E-11,
+      },
+      {
+          -2.212823709798E-06, -4.249704742353E-07, 2.831739755462E-06,
+          -6.000115718138E-07, 7.597020291557E-10, 3.517154874443E-09,
+          4.149084521319E-10, -5.289806153651E-11, 7.196798841269E-13,
+      },
+      {
+          9.648139704737E-08, 4.164960852522E-08, -1.164969298033E-07,
+          2.045211951761E-08, 1.799505288362E-09, -4.453195673947E-10,
+          -6.803200444549E-12, 3.864394776250E-12, -1.441033650378E-13,
+      },
+      {
+          -1.611904413846E-09, -9.893423877739E-10, 1.785440278790E-09,
+          -1.790312871690E-10, -9.280890205774E-11, 2.002478264932E-11,
+          -1.151855939531E-12, -8.694978774411E-15, 1.734769090475E-15,
+      },
+  };
+
+  // RDNE = n;
+  // RTE = T;
+
+  // DNE = RDNE;
+  // TT = RTE;
+  // E = DNE * 1.0E-14;
+
+  // RN = log(E);
+  // RT = log(TT);
+
+  // suma = 0.0;
+  // for (i = 1; i <= 9; i++) {
+    // i1 = i - 1;
+    // for (j = 1; j <= 9; j++) {
+      // j1 = j - 1;
+      // RNJ = pow(RN, j1);
+      // if ((RN == 0.0) && (j1 == 0))
+        // RNJ = 1.0;
+      // RTI = pow(RT, i1);
+      // if ((RT == 0.0) && (i1 == 0))
+        // RTI = 1.0;
+      // suma = suma + MATA[j - 1][i - 1] * RNJ * RTI;
+    // }
+  // }
+
+  // fEXC = exp(suma)*1.0E-6;
+  
+  E = n * 1.0E-14;
+  E = log(E);
+  T = log(T);
+  
+  suma = 0.0;
+  
+  for (i = 0; i <=8; i++) {
+	  for (j = 0; j <= 8; j++) {
+		  suma = suma + MATA[j][i] * pow(E,j) * pow(T,i);
+	  }
+  }
+
+  fEXC = exp(suma)*1.0E-6;
   return fEXC;
 }
