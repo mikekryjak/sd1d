@@ -141,15 +141,19 @@ protected:
     OPTION(opt, elastic_scattering,
            false);                  // Include ion-neutral elastic scattering?
     OPTION(opt, excitation, false); // Include electron impact excitation?
-		OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
-		OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
-		OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
-
     OPTION(opt, gamma_sound, 5. / 3); // Ratio of specific heats
+			
     bndry_flux_fix =
         opt["bndry_flux_fix"]
             .doc("Calculate boundary fluxes using simple mid-point (recommended)")
             .withDefault<bool>(true);
+						
+		// MK ADDITIONS
+		OPTION(opt, iz_rate, "default"); // Set to "SOLPS" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
+		OPTION(opt, ex_rate, "default"); // Set to "SOLPS" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
+		OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
+		OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
+		OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
 
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -301,7 +305,7 @@ protected:
                                  // power, energy transfer, friction
       SAVE_REPEAT2(Dn, kappa_n); // Neutral diffusion coefficients
       if (mesh->lastY()){        // only dump where we set the value
-	SAVE_REPEAT(flux_ion);   // Flux of ions to target
+				SAVE_REPEAT(flux_ion);   // Flux of ions to target
       }
     }
     if (heat_conduction) {
@@ -1096,15 +1100,29 @@ protected:
             // Ionisation
 
             if (ionisation) {
-              BoutReal R_iz_L = Ne_L * Nn_L *
-                                hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
+							BoutReal R_iz_L, R_iz_C, R_iz_R;
+						
+							if (iz_rate=="solps") {
+								R_iz_L = Ne_L * Nn_L *
+																	hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
+																	Omega_ci;
+								R_iz_C = Ne_C * Nn_C *
+																	hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
+																	Omega_ci;
+								R_iz_R = Ne_R * Nn_R *
+																	hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
+																	Omega_ci;
+							} else {
+								R_iz_L = Ne_L * Nn_L *
+                                hydrogen.ionisation_old(Te_L * Tnorm) * Nnorm /
                                 Omega_ci;
-              BoutReal R_iz_C = Ne_C * Nn_C *
-                                hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-                                Omega_ci;
-              BoutReal R_iz_R = Ne_R * Nn_R *
-                                hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-                                Omega_ci;
+								R_iz_C = Ne_C * Nn_C *
+																	hydrogen.ionisation_old(Te_C * Tnorm) * Nnorm /
+																	Omega_ci;
+								R_iz_R = Ne_R * Nn_R *
+																	hydrogen.ionisation_old(Te_R * Tnorm) * Nnorm /
+																	Omega_ci;
+							}
 
               Riz(i, j, k) =
                   (Eionize / Tnorm) *
@@ -1191,19 +1209,37 @@ protected:
               // Currently assuming that quantity calculated is in [eV m^3/s]
               // MK modified this to calculate net excitation rate from AMJUEL 
               // effective excitation energy rate minus base ionisation energy cost 13.6eV * fION  
-
-              BoutReal R_ex_L = Ne_L * Nn_L *
-                                (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6 / Tnorm) * Nnorm /
-                                Omega_ci / Tnorm;
-              BoutReal R_ex_C = Ne_C * Nn_C *
-                                (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6 / Tnorm) * Nnorm /
-                                Omega_ci / Tnorm;
-              BoutReal R_ex_R = Ne_R * Nn_R *
-                                (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6 / Tnorm) * Nnorm /
-                                Omega_ci / Tnorm;
+							BoutReal R_ex_L, R_ex_C, R_ex_R;
+							
+							if (ex_rate=="solps") {
+								R_ex_L = Ne_L * Nn_L *
+																	(hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6) * Nnorm /
+																	Omega_ci / Tnorm;
+								R_ex_C = Ne_C * Nn_C *
+																	(hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6) * Nnorm /
+																	Omega_ci / Tnorm;
+								R_ex_R = Ne_R * Nn_R *
+																	(hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6) * Nnorm /
+																	Omega_ci / Tnorm;
+									
+								Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+															 (6. * J_C);
+							} else {
+								// Calculate the old way for comparison
+								R_ex_L = Ne_L * Nn_L *
+																	hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+																	Omega_ci / Tnorm;
+								R_ex_C = Ne_C * Nn_C *
+																	hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+																	Omega_ci / Tnorm;
+								R_ex_R = Ne_R * Nn_R *
+																	hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+																	Omega_ci / Tnorm;
 								
-              Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-                             (6. * J_C);
+							
+								Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+															 (6. * J_C);
+							}
 														 
 							if (atomic_debug) {							 
 								// Calculate the old way for comparison
@@ -1848,7 +1884,9 @@ protected:
 
 private:
   // MK additions. See OPTIONS for descriptions
-  std::string dn_model;
+  std::string iz_rate;
+	std::string ex_rate;
+	std::string dn_model;
   std::string cx_model;
   bool atomic_debug;
   
