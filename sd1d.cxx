@@ -143,6 +143,7 @@ protected:
     OPTION(opt, excitation, false); // Include electron impact excitation?
 	OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
 	OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
+	OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
 
     OPTION(opt, gamma_sound, 5. / 3); // Ratio of specific heats
     bndry_flux_fix =
@@ -336,7 +337,9 @@ protected:
         }
 
         /// Rate diagnostics
+		if (atomic_debug) {
         SAVE_REPEAT2(Siz_compare, Rex_compare);
+		}
       }
 
       SAVE_REPEAT(Vi);
@@ -1124,23 +1127,25 @@ protected:
               Siz(i, j, k) =
                   -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
                   (6. * J_C);
+			  
+							if (atomic_debug) {
+								// Rate diagnostics
+								// Calculate field Siz_compare which is saved but doesn't go into other calculations
+								R_iz_L = Ne_L * Nn_L *
+								hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
+								Omega_ci;
+								R_iz_C = Ne_C * Nn_C *
+								hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
+								Omega_ci;
+								R_iz_R = Ne_R * Nn_R *
+								hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
+								Omega_ci;
 
-              // Rate diagnostics
-              // Calculate field Siz_compare which is saved but doesn't go into other calculations
-              R_iz_L = Ne_L * Nn_L *
-                hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
-                Omega_ci;
-              R_iz_C = Ne_C * Nn_C *
-                hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-                Omega_ci;
-              R_iz_R = Ne_R * Nn_R *
-                hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-                Omega_ci;
-
-              Siz_compare(i, j, k) =
-                -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
-                (6. * J_C);
-            }
+								Siz_compare(i, j, k) =
+								-(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
+								(6. * J_C);
+							}
+						}
 
             if (elastic_scattering) {
               /////////////////////////////////////////////////////////
@@ -1187,30 +1192,34 @@ protected:
               // effective excitation energy rate minus base ionisation energy cost 13.6eV * fION  
 
               BoutReal R_ex_L = Ne_L * Nn_L *
-                                (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6) * Nnorm /
+                                (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6 / Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
               BoutReal R_ex_C = Ne_C * Nn_C *
-                                (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6) * Nnorm /
+                                (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6 / Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
               BoutReal R_ex_R = Ne_R * Nn_R *
-                                (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6) * Nnorm /
+                                (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6 / Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
 								
               Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                              (6. * J_C);
-							 
-			  R_ex_L = Ne_L * Nn_L *
-                                (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation_coronal(Te_L * Tnorm) * 13.6) * Nnorm /
+														 
+							if (atomic_debug) {							 
+								// Calculate the old way for comparison
+							R_ex_L = Ne_L * Nn_L *
+                                (hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
               R_ex_C = Ne_C * Nn_C *
-                                (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation_coronal(Te_C * Tnorm) * 13.6) * Nnorm /
+                                (hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
               R_ex_R = Ne_R * Nn_R *
-                                (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation_coronal(Te_R * Tnorm) * 13.6) * Nnorm /
+                                (hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
                                 Omega_ci / Tnorm;
 								
+							
               Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                              (6. * J_C);
+							}
             }
 
             // Total energy lost from system
@@ -1837,8 +1846,11 @@ protected:
   }
 
 private:
+  // MK additions. See OPTIONS for descriptions
   std::string dn_model;
   std::string cx_model;
+  bool atomic_debug
+  
   bool cfl_info; // Print additional information on CFL limits
 
   // Normalisation parameters
