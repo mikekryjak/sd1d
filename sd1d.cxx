@@ -1227,6 +1227,25 @@ protected:
 
                 Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                (6. * J_C);
+                               
+                if (atomic_debug) {							 
+                  // Calculate the old way for comparison
+                  R_ex_L = Ne_L * Nn_L *
+                                    hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  R_ex_C = Ne_C * Nn_C *
+                                    hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  R_ex_R = Ne_R * Nn_R *
+                                    hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  
+                
+                  Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                                 (6. * J_C);
+                }
+              }
+              
               } else {
                 // Calculate the old way for comparison
                 R_ex_L = Ne_L * Nn_L *
@@ -1238,28 +1257,10 @@ protected:
                 R_ex_R = Ne_R * Nn_R *
                                   hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
                                   Omega_ci / Tnorm;
-                
-              
-                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-                               (6. * J_C);
+           
               }
                              
-              if (atomic_debug) {							 
-                // Calculate the old way for comparison
-                R_ex_L = Ne_L * Nn_L *
-                                  hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                R_ex_C = Ne_C * Nn_C *
-                                  hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                R_ex_R = Ne_R * Nn_R *
-                                  hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                
               
-                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-                               (6. * J_C);
-              }
             }
 
             // Total energy lost from system
