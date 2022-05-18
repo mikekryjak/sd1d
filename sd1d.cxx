@@ -1151,14 +1151,14 @@ protected:
                 // Rate diagnostics
                 // Calculate field Siz_compare which is saved but doesn't go into other calculations
                 R_iz_L = Ne_L * Nn_L *
-                hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
-                Omega_ci;
+                                hydrogen.ionisation_old(Te_L * Tnorm) * Nnorm /
+                                Omega_ci;
                 R_iz_C = Ne_C * Nn_C *
-                hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-                Omega_ci;
+                                  hydrogen.ionisation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci;
                 R_iz_R = Ne_R * Nn_R *
-                hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-                Omega_ci;
+                                  hydrogen.ionisation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci;
 
                 Siz_compare(i, j, k) =
                 -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
@@ -1255,6 +1255,9 @@ protected:
                 R_ex_R = Ne_R * Nn_R *
                                   hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
                                   Omega_ci / Tnorm;
+                                  
+                Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
               }
             }
 
