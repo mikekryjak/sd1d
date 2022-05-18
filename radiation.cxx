@@ -365,22 +365,7 @@ BoutReal UpdatedRadiatedPower::chargeExchange(BoutReal T) {
   return 1.0E-6 * exp(lograte);
 }
 
-// <sigma*v> [m3/s]
-// ORIGINAL FUNCTION
-//BoutReal UpdatedRadiatedPower::excitation(BoutReal Te) {
-//  double fEXC;	//<sigma*v> [m3/s]
-//  double TT,Y;
-//  
-//  TT=Te;
-//  
-//  if (TT<1.0) TT=1.0;
-//  Y=10.2/TT;
-//  fEXC=49.0E-14/(0.28+Y)*exp(-Y)*sqrt(Y*(1.0+Y));
-//  
-//  return fEXC;
-//}
-
-// MANUALLY FIT BY MK TO MATCH STEFAN MIJIN THESIS E_iz (SOLKIT)
+// Original excitation rate
 BoutReal UpdatedRadiatedPower::excitation_old(BoutReal Te) {
   double fEXC;	//<sigma*v> [m3/s]
   double TT,Y;
@@ -389,12 +374,13 @@ BoutReal UpdatedRadiatedPower::excitation_old(BoutReal Te) {
   
   if (TT<1.0) TT=1.0;
   Y=10.2/TT;
-  fEXC=1E-13*5.27370587/(1.14166254+Y)*exp(-Y*1.24326264);
+  
+  fEXC=49.0E-14/(0.28+Y)*exp(-Y)*sqrt(Y*(1.0+Y));
   
   return fEXC;
 }
 
-
+// Original ionisation rate
 // Collision rate coefficient <sigma*v> [m3/s]
 BoutReal UpdatedRadiatedPower::ionisation_old(BoutReal T) {
     double fION; // Rate coefficient
@@ -405,8 +391,7 @@ BoutReal UpdatedRadiatedPower::ionisation_old(BoutReal T) {
     }
     
     TT = T;
-	
-// ORIGINAL SD1D RATE
+
     double ioncoeffs[9] = {-3.271397E1, 1.353656E1, -5.739329, 1.563155, \
 			   -2.877056E-1, 3.482560e-2, -2.631976E-3, \
 			   1.119544E-4, -2.039150E-6};
