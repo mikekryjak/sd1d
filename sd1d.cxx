@@ -149,8 +149,8 @@ protected:
             .withDefault<bool>(true);
             
     // MK ADDITIONS
-    OPTION(opt, iz_rate, "default"); // Set to "SOLPS" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
-    OPTION(opt, ex_rate, "default"); // Set to "SOLPS" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, iz_rate, "default"); // Set to "solkit" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, ex_rate, "default"); // Set to "solkit" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
     OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
