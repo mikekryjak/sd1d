@@ -1102,7 +1102,7 @@ protected:
             if (ionisation) {
               BoutReal R_iz_L, R_iz_C, R_iz_R;
             
-              if (iz_rate=="solps") {
+              if (iz_rate=="solkit") {
                 R_iz_L = Ne_L * Nn_L *
                                   hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
                                   Omega_ci;
@@ -1214,7 +1214,7 @@ protected:
               // for in the excitation energy rate already. Note functions are in m-3 hence 1e8 * 1e6
               BoutReal R_ex_L, R_ex_C, R_ex_R;
 
-              if (ex_rate=="solps") {
+              if (ex_rate=="solkit") {
                 R_ex_L = Ne_L * Nn_L *
                                   (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_L * Tnorm) * 13.6) * Nnorm /
                                   Omega_ci / Tnorm;
