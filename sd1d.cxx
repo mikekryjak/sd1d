@@ -1209,20 +1209,20 @@ protected:
               // Currently assuming that quantity calculated is in [eV m^3/s]
               // MK modified this to calculate net excitation rate from AMJUEL 
               // effective excitation energy rate minus base ionisation energy cost 13.6eV * fION  
-              // where fION is the Sawada ionisation rate in the low density (coronal) limit of 1e-8 m-3
+              // where fION is the Sawada ionisation rate in the low density (coronal) limit of 1e8 cm-3
               // this is used because the coronal limit won't include any excited state effects which are accounted 
-              // for in the excitation energy rate already.
+              // for in the excitation energy rate already. Note functions are in m-3 hence 1e8 * 1e6
               BoutReal R_ex_L, R_ex_C, R_ex_R;
 
               if (ex_rate=="solps") {
                 R_ex_L = Ne_L * Nn_L *
-                                  (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation(1e-8, Te_L * Tnorm) * 13.6) * Nnorm /
+                                  (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_L * Tnorm) * 13.6) * Nnorm /
                                   Omega_ci / Tnorm;
                 R_ex_C = Ne_C * Nn_C *
-                                  (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation(1e-8, Te_C * Tnorm) * 13.6) * Nnorm /
+                                  (hydrogen.excitation(Ne_C * Nnorm, Te_C * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_C * Tnorm) * 13.6) * Nnorm /
                                   Omega_ci / Tnorm;
                 R_ex_R = Ne_R * Nn_R *
-                                  (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation(1e-8, Te_R * Tnorm) * 13.6) * Nnorm /
+                                  (hydrogen.excitation(Ne_R * Nnorm, Te_R * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_R * Tnorm) * 13.6) * Nnorm /
                                   Omega_ci / Tnorm;
 
                 Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
