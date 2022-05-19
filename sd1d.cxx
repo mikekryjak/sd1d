@@ -599,6 +599,8 @@ protected:
           
                 if (dn_model=="solkit") {
                   
+                  BoutReal sigma_ne = 
+                  
                   Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
                 } else {
                   Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
@@ -1012,13 +1014,13 @@ protected:
               // CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
               if (cx_model == "solkit") {
                 R_cx_L = Ne_L * Nn_L *
-                                      3e-19 * Vi_L *
+                                      3e-19 *Nnorm*rho_s0* Vi_L *
                                       (Nnorm / Omega_ci);
                 R_cx_C = Ne_C * Nn_C *
-                                      3e-19 * Vi_C *
+                                      3e-19 *Nnorm*rho_s0* Vi_C *
                                       (Nnorm / Omega_ci);
                 R_cx_R = Ne_R * Nn_R *
-                                      3e-19 * Vi_R *
+                                      3e-19 *Nnorm*rho_s0* Vi_R *
                                       (Nnorm / Omega_ci);
               } else {
               // ORIGINAL MODEL 
