@@ -557,9 +557,8 @@ protected:
         
         if (cx_model=="solkit") {
           
-          sigma_cx = Nelim(i, j, k) * Nnorm *
-                    (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) * Tnorm /
-                    Omega_ci;
+          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) // Dimensionless 
+                    
         } else {
           
           sigma_cx = Nelim(i, j, k) * Nnorm *
@@ -1013,15 +1012,12 @@ protected:
               // SOLKIT MODEL (MK 12/05/2022)
               // CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
               if (cx_model == "solkit") {
-                R_cx_L = Ne_L * Nn_L *
-                                      3e-19 *Nnorm*rho_s0* Vi_L *
-                                      (Nnorm / Omega_ci);
-                R_cx_C = Ne_C * Nn_C *
-                                      3e-19 *Nnorm*rho_s0* Vi_C *
-                                      (Nnorm / Omega_ci);
-                R_cx_R = Ne_R * Nn_R *
-                                      3e-19 *Nnorm*rho_s0* Vi_R *
-                                      (Nnorm / Omega_ci);
+                R_cx_L = Ne_L * Nn_L * (3e-19 * Nnorm * rho_s0) * Vi_L;
+
+                R_cx_C = Ne_C * Nn_C * (3e-19 * Nnorm * rho_s0) * Vi_C;
+
+                R_cx_R = Ne_R * Nn_R * (3e-19 * Nnorm * rho_s0) * Vi_R;
+
               } else {
               // ORIGINAL MODEL 
                 R_cx_L = Ne_L * Nn_L *
