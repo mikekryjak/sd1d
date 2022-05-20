@@ -1011,15 +1011,12 @@ protected:
         
               // SOLKIT MODEL (MK 12/05/2022)
               // CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
-              
-              // Multiplied by Omega_Ci only because it's what it takes to get the results right......
-              // As far as I know this is not correct.
               if (cx_model == "solkit") {
-                R_cx_L = Ne_L * Nn_L * (3e-19 * Nnorm * rho_s0) * Vi_L * Omega_ci;
+                R_cx_L = Ne_L * Nn_L * (3e-19 * Nnorm * rho_s0) * Vi_L;
 
-                R_cx_C = Ne_C * Nn_C * (3e-19 * Nnorm * rho_s0) * Vi_C * Omega_ci;
+                R_cx_C = Ne_C * Nn_C * (3e-19 * Nnorm * rho_s0) * Vi_C;
 
-                R_cx_R = Ne_R * Nn_R * (3e-19 * Nnorm * rho_s0) * Vi_R * Omega_ci;
+                R_cx_R = Ne_R * Nn_R * (3e-19 * Nnorm * rho_s0) * Vi_R;
 
               } else {
               // ORIGINAL MODEL 
