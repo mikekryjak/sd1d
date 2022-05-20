@@ -557,7 +557,7 @@ protected:
         
         if (cx_model=="solkit") {
           
-          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless 
+          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) // Dimensionless 
                     
         } else {
           
