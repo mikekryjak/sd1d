@@ -149,8 +149,8 @@ protected:
             .withDefault<bool>(true);
             
     // MK ADDITIONS
-    OPTION(opt, iz_rate, "default"); // Set to "SOLPS" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
-    OPTION(opt, ex_rate, "default"); // Set to "SOLPS" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, iz_rate, "default"); // Set to "solkit" to enable rate H.4 2.1.5 used in SOLPS and in SOLKiT 
+    OPTION(opt, ex_rate, "default"); // Set to "solkit" to enable rate H.10 2.1.5 used in SOLPS and in SOLKiT 
     OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
@@ -557,9 +557,8 @@ protected:
         
         if (cx_model=="solkit") {
           
-          sigma_cx = Nelim(i, j, k) * Nnorm *
-                    (3e-19 * Nnorm * rho_s0) * Vi(i, j, k) * Tnorm /
-                    Omega_ci;
+          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless 
+                    
         } else {
           
           sigma_cx = Nelim(i, j, k) * Nnorm *
@@ -598,6 +597,8 @@ protected:
               if (include_dneut) {
           
                 if (dn_model=="solkit") {
+                  
+                  BoutReal sigma_ne = 
                   
                   Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
                 } else {
@@ -1011,15 +1012,12 @@ protected:
               // SOLKIT MODEL (MK 12/05/2022)
               // CONSTANT CROSS-SECTION 3E-19m2, COLD ION/NEUTRAL AND STATIC NEUTRAL ASSUMPTION
               if (cx_model == "solkit") {
-                R_cx_L = Ne_L * Nn_L *
-                                      3e-19 * Vi_L *
-                                      (Nnorm / Omega_ci);
-                R_cx_C = Ne_C * Nn_C *
-                                      3e-19 * Vi_C *
-                                      (Nnorm / Omega_ci);
-                R_cx_R = Ne_R * Nn_R *
-                                      3e-19 * Vi_R *
-                                      (Nnorm / Omega_ci);
+                R_cx_L = Ne_L * Nn_L * (3e-19 * Nnorm * rho_s0) * Vi_L;
+
+                R_cx_C = Ne_C * Nn_C * (3e-19 * Nnorm * rho_s0) * Vi_C;
+
+                R_cx_R = Ne_R * Nn_R * (3e-19 * Nnorm * rho_s0) * Vi_R;
+
               } else {
               // ORIGINAL MODEL 
                 R_cx_L = Ne_L * Nn_L *
@@ -1102,7 +1100,7 @@ protected:
             if (ionisation) {
               BoutReal R_iz_L, R_iz_C, R_iz_R;
             
-              if (iz_rate=="solps") {
+              if (iz_rate=="solkit") {
                 R_iz_L = Ne_L * Nn_L *
                                   hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
                                   Omega_ci;
@@ -1151,14 +1149,14 @@ protected:
                 // Rate diagnostics
                 // Calculate field Siz_compare which is saved but doesn't go into other calculations
                 R_iz_L = Ne_L * Nn_L *
-                hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
-                Omega_ci;
+                                hydrogen.ionisation_old(Te_L * Tnorm) * Nnorm /
+                                Omega_ci;
                 R_iz_C = Ne_C * Nn_C *
-                hydrogen.ionisation(Ne_C * Nnorm, Te_C * Tnorm) * Nnorm /
-                Omega_ci;
+                                  hydrogen.ionisation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci;
                 R_iz_R = Ne_R * Nn_R *
-                hydrogen.ionisation(Ne_R * Nnorm, Te_R * Tnorm) * Nnorm /
-                Omega_ci;
+                                  hydrogen.ionisation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci;
 
                 Siz_compare(i, j, k) =
                 -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
@@ -1214,7 +1212,7 @@ protected:
               // for in the excitation energy rate already. Note functions are in m-3 hence 1e8 * 1e6
               BoutReal R_ex_L, R_ex_C, R_ex_R;
 
-              if (ex_rate=="solps") {
+              if (ex_rate=="solkit") {
                 R_ex_L = Ne_L * Nn_L *
                                   (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_L * Tnorm) * 13.6) * Nnorm /
                                   Omega_ci / Tnorm;
@@ -1227,8 +1225,25 @@ protected:
 
                 Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                (6. * J_C);
+                               
+                if (atomic_debug) {							 
+                  // Calculate the old way for comparison
+                  R_ex_L = Ne_L * Nn_L *
+                                    hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  R_ex_C = Ne_C * Nn_C *
+                                    hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  R_ex_R = Ne_R * Nn_R *
+                                    hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+                                    Omega_ci / Tnorm;
+                  
+                
+                  Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                                 (6. * J_C);
+                }
               } else {
-                // Calculate the old way for comparison
+                // Calculate the SD1D default way
                 R_ex_L = Ne_L * Nn_L *
                                   hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
                                   Omega_ci / Tnorm;
@@ -1238,26 +1253,8 @@ protected:
                 R_ex_R = Ne_R * Nn_R *
                                   hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
                                   Omega_ci / Tnorm;
-                
-              
-                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-                               (6. * J_C);
-              }
-                             
-              if (atomic_debug) {							 
-                // Calculate the old way for comparison
-                R_ex_L = Ne_L * Nn_L *
-                                  hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                R_ex_C = Ne_C * Nn_C *
-                                  hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                R_ex_R = Ne_R * Nn_R *
-                                  hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
-                                  Omega_ci / Tnorm;
-                
-              
-                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                                  
+                Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                (6. * J_C);
               }
             }
