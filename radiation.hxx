@@ -61,7 +61,6 @@ public:
 
   // Ionisation rate coefficient <sigma*v> [m3/s]
   BoutReal ionisation(BoutReal Ne, BoutReal T); 
-  BoutReal ionisation_coronal(BoutReal T);
   BoutReal ionisation_old(BoutReal T);
   
   // Recombination rate coefficient <sigma*v> [m3/s]
