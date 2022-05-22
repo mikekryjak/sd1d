@@ -154,6 +154,7 @@ protected:
     OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
+    OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
 
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -501,7 +502,11 @@ protected:
         // Tn = floor(Tn, 0.025/Tnorm); // Minimum tn_floor
         Tn = floor(Tn, 1e-12);
       } else {
-        Tn = Te; // Strong CX coupling
+          if (tn_3ev) {
+            Tn = 3 / Tnorm; // Weak CX coupling, Tn=3eV (Franck-Condon, SOLKiT assumption) [MK]
+          } else {
+            Tn = Te; // Strong CX coupling
+          }
         Pn = Tn * floor(Nn, 0.0);
         Tn = floor(Tn, tn_floor / Tnorm); // Minimum of tn_floor
       }
@@ -1032,6 +1037,7 @@ protected:
               }
       
               // Ecx is energy transferred to neutrals
+              // Set to 0 if neutral temperature not evolved [MK]
               if (evolve_pn) {
                 Ecx(i, j, k) = (3. / 2) *
                                (J_L * (Te_L - Tn_L) * R_cx_L +
@@ -1891,6 +1897,7 @@ private:
 	std::string dn_model;
   std::string cx_model;
   bool atomic_debug;
+  bool tn_3ev;
   
   bool cfl_info; // Print additional information on CFL limits
 
