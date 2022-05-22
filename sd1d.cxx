@@ -1899,7 +1899,7 @@ private:
   std::string cx_model;
   bool atomic_debug;
   bool tn_3ev;
-  BoutReal kappa_epar_mod
+  BoutReal kappa_epar_mod;
   
   bool cfl_info; // Print additional information on CFL limits
 
