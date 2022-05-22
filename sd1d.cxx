@@ -1032,11 +1032,13 @@ protected:
               }
       
               // Ecx is energy transferred to neutrals
-              Ecx(i, j, k) = (3. / 2) *
-                             (J_L * (Te_L - Tn_L) * R_cx_L +
-                              4. * J_C * (Te_C - Tn_C) * R_cx_C +
-                              J_R * (Te_R - Tn_R) * R_cx_R) /
-                             (6. * J_C);
+              if (evolve_pn) {
+                Ecx(i, j, k) = (3. / 2) *
+                               (J_L * (Te_L - Tn_L) * R_cx_L +
+                                4. * J_C * (Te_C - Tn_C) * R_cx_C +
+                                J_R * (Te_R - Tn_R) * R_cx_R) /
+                               (6. * J_C);
+              }
 
               // Fcx is friction between plasma and neutrals
               Fcx(i, j, k) = (J_L * (Vi_L - Vn_L) * R_cx_L +
