@@ -155,6 +155,7 @@ protected:
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
+    OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
 
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -519,7 +520,7 @@ protected:
       tau_e = Omega_ci * tau_e0 * pow(Te, 1.5) / Ne;
 
       if (heat_conduction) {
-        kappa_epar = 3.2 * mi_me * 0.5 * P * tau_e;
+        kappa_epar = 3.2 * mi_me * 0.5 * P * tau_e * kappa_epar_mod;
 
         if (kappa_limit_alpha > 0.0) {
           /*
@@ -1898,6 +1899,7 @@ private:
   std::string cx_model;
   bool atomic_debug;
   bool tn_3ev;
+  BoutReal kappa_epar_mod
   
   bool cfl_info; // Print additional information on CFL limits
 
