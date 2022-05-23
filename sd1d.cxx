@@ -1281,10 +1281,10 @@ protected:
             // as SOLKiT by having double power in, double out to match the double pressure we have from 
             // having a plasma equation. [MK]
             if (double_radiation) {
-              Rzrad(i, j, k) = Rzrad(i, j, k) * 2
-              Rrec(i, j, k) = Rrec(i, j, k) * 2
-              Riz(i, j, k) = Riz(i, j, k) * 2
-              Rex(i, j, k) = Rex(i, j, k) * 2
+              Rzrad(i, j, k) = Rzrad(i, j, k) * 2;
+              Rrec(i, j, k) = Rrec(i, j, k) * 2;
+              Riz(i, j, k) = Riz(i, j, k) * 2;
+              Rex(i, j, k) = Rex(i, j, k) * 2;
             }
             
             // Total energy lost from system
