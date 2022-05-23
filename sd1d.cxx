@@ -157,6 +157,7 @@ protected:
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
     OPTION(opt, include_eiz, true); // Use this to suppress Eiz, an ion energy term. probably good idea when not evolving Tn.
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
+    OPTION(opt, double_radiation, false); // Use this to double radiation terms. Used for matching SOLKiT by solving double everything to get a 2x electron energy equation
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
  
 
@@ -1274,7 +1275,18 @@ protected:
                                (6. * J_C);
               }
             }
-
+            
+            // For matching SOL-KiT thesis version, I doubled the conductivity, doubled heat input,
+            // doubled radiation and got rid of ion energy terms. Hopefully this is the same 
+            // as SOLKiT by having double power in, double out to match the double pressure we have from 
+            // having a plasma equation. [MK]
+            if (double_radiation) {
+              Rzrad(i, j, k) = Rzrad(i, j, k) * 2
+              Rrec(i, j, k) = Rrec(i, j, k) * 2
+              Riz(i, j, k) = Riz(i, j, k) * 2
+              Rex(i, j, k) = Rex(i, j, k) * 2
+            }
+            
             // Total energy lost from system
             R(i, j, k) = Rzrad(i, j, k)  // Radiated power from impurities
                          + Rrec(i, j, k) // Recombination
@@ -1908,6 +1920,7 @@ private:
   bool tn_3ev;
   bool include_eiz;
   bool include_erec;
+  bool double_radiation;
   BoutReal kappa_epar_mod;
   
   bool cfl_info; // Print additional information on CFL limits
