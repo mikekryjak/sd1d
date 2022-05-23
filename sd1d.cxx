@@ -155,7 +155,9 @@ protected:
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
+    OPTION(opt, include_eiz, true); // Use this to suppress Eiz, probably good idea when not evolving Tn.
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
+ 
 
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -1137,12 +1139,14 @@ protected:
                       J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
                   (6. * J_C);
                   
-              Eiz(i, j, k) =
-                  -(3. / 2) *
-                  ( // Energy from neutral atom temperature
-                      J_L * Tn_L * R_iz_L + 4. * J_C * Tn_C * R_iz_C +
-                      J_R * Tn_R * R_iz_R) /
-                  (6. * J_C);
+              if (include_eiz) {
+                Eiz(i, j, k) =
+                    -(3. / 2) *
+                    ( // Energy from neutral atom temperature
+                        J_L * Tn_L * R_iz_L + 4. * J_C * Tn_C * R_iz_C +
+                        J_R * Tn_R * R_iz_R) /
+                    (6. * J_C);
+              }
 
               // Friction due to ionisation
               Fiz(i, j, k) = -(J_L * Vn_L * R_iz_L + 4. * J_C * Vn_C * R_iz_C +
@@ -1899,6 +1903,7 @@ private:
   std::string cx_model;
   bool atomic_debug;
   bool tn_3ev;
+  bool include_eiz;
   BoutReal kappa_epar_mod;
   
   bool cfl_info; // Print additional information on CFL limits
