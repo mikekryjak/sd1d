@@ -155,7 +155,8 @@ protected:
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
-    OPTION(opt, include_eiz, true); // Use this to suppress Eiz, probably good idea when not evolving Tn.
+    OPTION(opt, include_eiz, true); // Use this to suppress Eiz, an ion energy term. probably good idea when not evolving Tn.
+    OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
  
 
@@ -1090,11 +1091,13 @@ protected:
                    4. * J_C * (1.09 * Te_C - 13.6 / Tnorm) * R_rc_C +
                    J_R * (1.09 * Te_R - 13.6 / Tnorm) * R_rc_R) /
                   (6. * J_C);
-
-              Erec(i, j, k) = (3. / 2) *
-                              (J_L * Te_L * R_rc_L + 4. * J_C * Te_C * R_rc_C +
-                               J_R * Te_R * R_rc_R) /
-                              (6. * J_C);
+              
+              if (include_erec) {
+                Erec(i, j, k) = (3. / 2) *
+                                (J_L * Te_L * R_rc_L + 4. * J_C * Te_C * R_rc_C +
+                                 J_R * Te_R * R_rc_R) /
+                                (6. * J_C);
+              }
 
               Frec(i, j, k) = (J_L * Vi_L * R_rc_L + 4. * J_C * Vi_C * R_rc_C +
                                J_R * Vi_R * R_rc_R) /
@@ -1904,6 +1907,7 @@ private:
   bool atomic_debug;
   bool tn_3ev;
   bool include_eiz;
+  bool include_erec;
   BoutReal kappa_epar_mod;
   
   bool cfl_info; // Print additional information on CFL limits
