@@ -608,9 +608,10 @@ protected:
           
                 if (dn_model=="solkit") {
                   
-                  BoutReal sigma_ne = 
+                  BoutReal vth_3ev = sqrt(2 * 3 * 1.60217662E-19 / (AA * 1.6726219e-27)) / Cs0 // sqrt(2Te[eV] * q_e [J/eV] / (2 * mass_p [kg])) = Vth [m/s]. Normalised by  Cs0[m/s]
                   
-                  Dn(i, j, k) = dneut(i, j, k) * sqrt(2 * 3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                  Dn(i, j, k) = dneut(i, j, k) * vth_3ev / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                  
                 } else {
                   Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
                 }
