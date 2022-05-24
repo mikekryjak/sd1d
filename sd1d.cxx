@@ -610,7 +610,7 @@ protected:
                   
                   BoutReal sigma_ne = 
                   
-                  Dn(i, j, k) = dneut(i, j, k) * sqrt(3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                  Dn(i, j, k) = dneut(i, j, k) * sqrt(2 * 3 / Tnorm) / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
                 } else {
                   Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
                 }
