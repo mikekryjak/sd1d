@@ -161,8 +161,8 @@ protected:
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
     OPTION(opt, double_radiation, false); // Use this to double radiation terms. Used for matching SOLKiT by solving double everything to get a 2x electron energy equation
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
-    OPTION(opt, S_file, "none"); // Read S from file? If so, provide name of file using this option
-    OPTION(opt, R_file, "none"); // Read R from file? If so, provide name of file using this option
+    OPTION(opt, s_file, "none"); // Read S from file? If so, provide name of file using this option
+    OPTION(opt, r_file, "none"); // Read R from file? If so, provide name of file using this option
    
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -395,8 +395,8 @@ protected:
     Rex_compare = 0.0;
     
     // If a file name has been provided, read S from a netCDF file.
-    if (S_file != "none"){
-      Options fields_in = OptionsNetCDF(S_file).read();
+    if (s_file != "none"){
+      Options fields_in = OptionsNetCDF(s_file).read();
       S = fields_in["S"].as<Field3D>();
       
     } else {
@@ -404,8 +404,8 @@ protected:
     }
     
     // If a file name has been provided, read R from a netCDF file.
-    if (R_file != "none"){
-      Options fields_in = OptionsNetCDF(S_file).read();
+    if (r_file != "none"){
+      Options fields_in = OptionsNetCDF(r_file).read();
       R = fields_in["R"].as<Field3D>();
       
     } else {
@@ -1300,7 +1300,7 @@ protected:
             // doubled radiation and got rid of ion energy terms. Hopefully this is the same 
             // as SOLKiT by having double power in, double out to match the double pressure we have from 
             // having a plasma equation. [MK]
-            if (double_radiation && R_file == "none") {
+            if (double_radiation && r_file == "none") {
               Rzrad(i, j, k) = Rzrad(i, j, k) * 2;
               Rrec(i, j, k) = Rrec(i, j, k) * 2;
               Riz(i, j, k) = Riz(i, j, k) * 2;
@@ -1309,7 +1309,7 @@ protected:
             
             // Total energy lost from system
             // Compute only if we're not reading it from file [MK]
-            if (R_file == "none") {
+            if (r_file == "none") {
               R(i, j, k) = Rzrad(i, j, k)  // Radiated power from impurities
                            + Rrec(i, j, k) // Recombination
                            + Riz(i, j, k)  // Ionisation
@@ -1337,7 +1337,7 @@ protected:
 
             // Total sink of plasma, source of neutrals
             // Compute only if we're not reading it from file [MK]
-            if (S_file == "none") {
+            if (s_file == "none") {
               S(i, j, k) = Srec(i, j, k) + Siz(i, j, k);
               
             } else {
@@ -1960,8 +1960,8 @@ private:
   bool include_erec;
   bool double_radiation;
   BoutReal kappa_epar_mod;
-  std::string S_file;
-  std::string R_file;
+  std::string s_file;
+  std::string r_file;
   
   bool cfl_info; // Print additional information on CFL limits
 
