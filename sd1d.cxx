@@ -54,6 +54,8 @@
 #include "atomicpp/ImpuritySpecies.hxx"
 #include "atomicpp/Prad.hxx"
 
+#include "options_netcdf.hxx"
+using bout::experimental::OptionsNetCDF;
 using bout::HeatFluxSNB;
 
 class SD1D : public PhysicsModel {
@@ -159,8 +161,9 @@ protected:
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
     OPTION(opt, double_radiation, false); // Use this to double radiation terms. Used for matching SOLKiT by solving double everything to get a 2x electron energy equation
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
- 
-
+    OPTION(opt, S_file, "none"); // Read S from file? If so, provide name of file using this option
+    OPTION(opt, R_file, "none"); // Read R from file? If so, provide name of file using this option
+   
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
 
@@ -372,7 +375,6 @@ protected:
 
     Srec = 0.0;
     Siz = 0.0;
-    S = 0.0;
     Frec = 0.0;
     Fiz = 0.0;
     Fcx = 0.0;
@@ -382,7 +384,6 @@ protected:
     Riz = 0.0;
     Rzrad = 0.0;
     Rex = 0.0;
-    R = 0.0;
     Erec = 0.0;
     Eiz = 0.0;
     Ecx = 0.0;
@@ -392,6 +393,24 @@ protected:
     Dcx_T = 0.0;
     Siz_compare = 0.0;
     Rex_compare = 0.0;
+    
+    // If a file name has been provided, read S from a netCDF file.
+    if (S_file != "none"){
+      Options fields_in = OptionsNetCDF(S_file).read();
+      S = fields_in["S"].as<Field3D>();
+      
+    } else {
+      S = 0;
+    }
+    
+    // If a file name has been provided, read R from a netCDF file.
+    if (R_file != "none"){
+      Options fields_in = OptionsNetCDF(S_file).read();
+      R = fields_in["R"].as<Field3D>();
+      
+    } else {
+      R = 0;
+    }
     
     flux_ion = 0.0;
 
@@ -508,7 +527,7 @@ protected:
         Tn = floor(Tn, 1e-12);
       } else {
           if (tn_3ev) {
-            Tn = 3 / Tnorm; // Weak CX coupling, Tn=3eV (Franck-Condon, SOLKiT assumption) [MK]
+            Tn = 3 / Tnorm; // Weak CX coupling, Tn=3eV (Franck-Condon, SOLKiT assumption). Do not use  [MK]
           } else {
             Tn = Te; // Strong CX coupling
           }
@@ -567,7 +586,7 @@ protected:
         
         if (cx_model=="solkit") {
           
-          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless 
+          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless.
                     
         } else {
           
@@ -1281,7 +1300,7 @@ protected:
             // doubled radiation and got rid of ion energy terms. Hopefully this is the same 
             // as SOLKiT by having double power in, double out to match the double pressure we have from 
             // having a plasma equation. [MK]
-            if (double_radiation) {
+            if (double_radiation && R_file == "none") {
               Rzrad(i, j, k) = Rzrad(i, j, k) * 2;
               Rrec(i, j, k) = Rrec(i, j, k) * 2;
               Riz(i, j, k) = Riz(i, j, k) * 2;
@@ -1289,10 +1308,20 @@ protected:
             }
             
             // Total energy lost from system
-            R(i, j, k) = Rzrad(i, j, k)  // Radiated power from impurities
-                         + Rrec(i, j, k) // Recombination
-                         + Riz(i, j, k)  // Ionisation
-                         + Rex(i, j, k); // Excitation
+            // Compute only if we're not reading it from file [MK]
+            if (R_file == "none") {
+              R(i, j, k) = Rzrad(i, j, k)  // Radiated power from impurities
+                           + Rrec(i, j, k) // Recombination
+                           + Riz(i, j, k)  // Ionisation
+                           + Rex(i, j, k); // Excitation
+                           
+            } else {
+              Rzrad(i, j, k) = 0;
+              Rrec(i, j, k) = 0;
+              Riz(i, j, k) = 0;
+              Rex(i, j, k) = 0;
+            }
+              
 
             // Total energy transferred to neutrals
             E(i, j, k) = Ecx(i, j, k)    // Charge exchange
@@ -1307,7 +1336,15 @@ protected:
                          + Fel(i, j, k); // Elastic collisions
 
             // Total sink of plasma, source of neutrals
-            S(i, j, k) = Srec(i, j, k) + Siz(i, j, k);
+            // Compute only if we're not reading it from file [MK]
+            if (S_file == "none") {
+              S(i, j, k) = Srec(i, j, k) + Siz(i, j, k);
+              
+            } else {
+              Srec(i, j, k) = 0;
+              Siz(i, j, k) = 0;
+            }
+            
 
             ASSERT3(finite(R(i, j, k)));
             ASSERT3(finite(E(i, j, k)));
@@ -1923,6 +1960,8 @@ private:
   bool include_erec;
   bool double_radiation;
   BoutReal kappa_epar_mod;
+  std::string S_file;
+  std::string R_file;
   
   bool cfl_info; // Print additional information on CFL limits
 
