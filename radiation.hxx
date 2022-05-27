@@ -75,11 +75,11 @@ public:
   // Yulin's neutral excited state population coefficients [Nn(H(n=x)) / Nn(H)]
   // Ratios of excited state to ground state populations.
   // NOTE THAT TEMPERATURE IS FIRST AND DENSITY SECOND OUTPUT
-  BoutReal Channel_H_2_amjuel(BoutReal T,BoutReal Ne)
-  BoutReal Channel_H_3_amjuel(BoutReal T,BoutReal Ne)
-  BoutReal Channel_H_4_amjuel(BoutReal T,BoutReal Ne)
-  BoutReal Channel_H_5_amjuel(BoutReal T,BoutReal Ne)
-  BoutReal Channel_H_6_amjuel(BoutReal T,BoutReal Ne)
+  BoutReal Channel_H_2_amjuel(BoutReal T,BoutReal Ne);
+  BoutReal Channel_H_3_amjuel(BoutReal T,BoutReal Ne);
+  BoutReal Channel_H_4_amjuel(BoutReal T,BoutReal Ne);
+  BoutReal Channel_H_5_amjuel(BoutReal T,BoutReal Ne);
+  BoutReal Channel_H_6_amjuel(BoutReal T,BoutReal Ne);
   
 private:
   
