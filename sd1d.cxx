@@ -398,6 +398,10 @@ protected:
     Dcx_T = 0.0;
     Siz_compare = 0.0;
     Rex_compare = 0.0;
+    dn_sigma_cx = 0.0;
+    dn_sigma_iz = 0.0;
+    dn_sigma_nn = 0.0;
+    dn_vth_n = 0.0;
     
     // If a file name has been provided, read S from a netCDF file.
     if (s_file != "none"){
