@@ -579,7 +579,8 @@ protected:
         
         kappa_epar.applyBoundary("neumann");
       }
-
+      
+      
       if (atomic) {
         // Neutral diffusion rate
 
@@ -592,9 +593,6 @@ protected:
         // Initialise outside of the if statement
         // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
         BoutReal sigma_cx;
-        
-        // For SD1D Dn model debug
-        BoutReal dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n;
         
         if (cx_model=="solkit") {
           
