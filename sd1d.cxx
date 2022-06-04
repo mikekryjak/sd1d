@@ -156,6 +156,7 @@ protected:
     OPTION(opt, dn_model, "default"); // Set to "solkit" to enable SOLKiT neutral diffusion
     OPTION(opt, cx_model, "default"); // Set to "solkit" to enable SOLKiT charge exchange friction
     OPTION(opt, atomic_debug, false); // Save Siz_compare and Rex_compare which correspond to SD1D default Siz & Rex 
+    OPTION(opt, dn_debug, false); // Save neutral diffusion equation terms
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
     OPTION(opt, include_eiz, true); // Use this to suppress Eiz, an ion energy term. probably good idea when not evolving Tn.
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
@@ -350,9 +351,13 @@ protected:
         }
 
         /// Rate diagnostics
-    if (atomic_debug) {
-        SAVE_REPEAT2(Siz_compare, Rex_compare);
-    }
+        if (atomic_debug) {
+            SAVE_REPEAT2(Siz_compare, Rex_compare);
+        }
+        // Neutral diffusion diagnostics
+        if (dn_debug) {
+            SAVE_REPEAT4(dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n);
+        }
       }
 
       SAVE_REPEAT(Vi);
@@ -584,6 +589,9 @@ protected:
         // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
         BoutReal sigma_cx;
         
+        // For SD1D Dn model debug
+        BoutReal dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n;
+        
         if (cx_model=="solkit") {
           
           sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless.
@@ -633,6 +641,13 @@ protected:
                   
                 } else {
                   Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
+                  
+                  if (dn_debug) {
+                    dn_sigma_cx = sigma_cx;
+                    dn_sigma_iz = sigma_iz;
+                    dn_sigma_nn = sigma_nn;
+                    dn_vth_n = vth_n;
+                  }
                 }
                         // Neutral gas heat conduction
                         kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
@@ -1955,6 +1970,8 @@ private:
 	std::string dn_model;
   std::string cx_model;
   bool atomic_debug;
+  bool dn_debug;
+  Field3D dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n;
   bool tn_3ev;
   bool include_eiz;
   bool include_erec;
