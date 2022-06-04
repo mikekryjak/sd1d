@@ -631,6 +631,13 @@ protected:
 
               // Total neutral collision frequency
               BoutReal sigma = sigma_cx + sigma_iz + sigma_nn;
+              
+              if (dn_debug) {
+                dn_sigma_cx = sigma_cx;
+                dn_sigma_iz = sigma_iz;
+                dn_sigma_nn = sigma_nn;
+                dn_vth_n = vth_n;
+              }
 
               // Neutral gas diffusion
               if (include_dneut) {
@@ -644,12 +651,7 @@ protected:
                 } else {
                   Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
                   
-                  if (dn_debug) {
-                    dn_sigma_cx = sigma_cx;
-                    dn_sigma_iz = sigma_iz;
-                    dn_sigma_nn = sigma_nn;
-                    dn_vth_n = vth_n;
-                  }
+                  
                 }
                         // Neutral gas heat conduction
                         kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
