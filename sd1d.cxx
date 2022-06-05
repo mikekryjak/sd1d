@@ -590,25 +590,33 @@ protected:
               // Charge exchange frequency, normalised to ion cyclotron
               // frequency
         
-        // Initialise outside of the if statement
-        // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
-        BoutReal sigma_cx;
-        
-        if (cx_model=="solkit") {
-          
-          sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless.
-                    
-        } else {
-          
-          sigma_cx = Nelim(i, j, k) * Nnorm *
-                    hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
-                    Omega_ci;
-        }
+              // Initialise outside of the if statement
+              // Cross-sections normalised as sigma*Nnorm*rho_s0 == [m2][m-3][m]
+              BoutReal sigma_cx;
+              
+              if (cx_model == "solkit") {
+                
+                sigma_cx = Nelim(i, j, k) * (3e-19 * Nnorm * rho_s0) * Vi(i, j, k); // Dimensionless.
+                          
+              } else {
+                
+                sigma_cx = Nelim(i, j, k) * Nnorm *
+                          hydrogen.chargeExchange(Te(i, j, k) * Tnorm) /
+                          Omega_ci;
+              }
 
+              
               // Ionisation frequency
-              BoutReal sigma_iz = Nelim(i, j, k) * Nnorm *
-                                  hydrogen.ionisation(Ne(i,j,k) * Nnorm, Te(i, j, k) * Tnorm) /
-                                  Omega_ci;
+              BoutReal sigma_iz;
+              if (iz_rate == "solkit") {              
+                sigma_iz = Nelim(i, j, k) * Nnorm *
+                                    hydrogen.ionisation(Ne(i,j,k) * Nnorm, Te(i, j, k) * Tnorm) /
+                                    Omega_ci;
+              } else {
+                sigma_iz = Nelim(i, j, k) * Nnorm *
+                                    hydrogen.ionisation_old(Te(i, j, k) * Tnorm) /
+                                    Omega_ci;
+              }
 
               // Neutral thermal velocity
               BoutReal tn = Tn(i, j, k);
@@ -633,10 +641,10 @@ protected:
               BoutReal sigma = sigma_cx + sigma_iz + sigma_nn;
               
               if (dn_debug) {
-                dn_sigma_cx = sigma_cx;
-                dn_sigma_iz = sigma_iz;
-                dn_sigma_nn = sigma_nn;
-                dn_vth_n = vth_n;
+                dn_sigma_cx(i, j, k) = sigma_cx;
+                dn_sigma_iz(i, j, k) = sigma_iz;
+                dn_sigma_nn(i, j, k) = sigma_nn;
+                dn_vth_n(i, j, k) = vth_n;
               }
 
               // Neutral gas diffusion
@@ -1154,7 +1162,7 @@ protected:
             if (ionisation) {
               BoutReal R_iz_L, R_iz_C, R_iz_R;
             
-              if (iz_rate=="solkit") {
+              if (iz_rate == "solkit") {
                 R_iz_L = Ne_L * Nn_L *
                                   hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
                                   Omega_ci;
