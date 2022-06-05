@@ -162,6 +162,7 @@ protected:
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
     OPTION(opt, double_radiation, false); // Use this to double radiation terms. Used for matching SOLKiT by solving double everything to get a 2x electron energy equation
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
+    OPTION(opt, f_mod, 1.0); // Multiplier on F, the momentum sink
     OPTION(opt, s_file, "none"); // Read S from file? If so, provide name of file using this option
     OPTION(opt, r_file, "none"); // Read R from file? If so, provide name of file using this option
    
@@ -1357,10 +1358,11 @@ protected:
                          + Eel(i, j, k); // Elastic collisions
 
             // Total friction
-            F(i, j, k) = Frec(i, j, k)   // Recombination
+            F(i, j, k) = (Frec(i, j, k)   // Recombination
                          + Fiz(i, j, k)  // Ionisation
                          + Fcx(i, j, k)  // Charge exchange
-                         + Fel(i, j, k); // Elastic collisions
+                         + Fel(i, j, k)) * f_mod; // Elastic collisions
+             
 
             // Total sink of plasma, source of neutrals
             // Compute only if we're not reading it from file [MK]
@@ -1989,6 +1991,7 @@ private:
   bool include_erec;
   bool double_radiation;
   BoutReal kappa_epar_mod;
+  BoutReal f_mod;
   std::string s_file;
   std::string r_file;
   
