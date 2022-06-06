@@ -687,7 +687,7 @@ protected:
 
       // Outward flow velocity to >= Cs
       BoutReal Vout =
-          sqrt(2.0 * Te(r.ind, mesh->yend, jz)); // Sound speed outwards
+          sqrt(2.0 * Te(r.ind, mesh->yend, jz)); // Sound speed outwards (MK: Is this a Cs calculation with a 2 factor?)
       if (Vi(r.ind, mesh->yend, jz) > Vout)
         Vout = Vi(r.ind, mesh->yend,
                   jz); // If plasma is faster, go to plasma velocity
