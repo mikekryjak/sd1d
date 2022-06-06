@@ -1290,23 +1290,62 @@ protected:
 
                 Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                (6. * J_C);
-                               
-                if (atomic_debug) {							 
-                  // Calculate the old way for comparison
-                  R_ex_L = Ne_L * Nn_L *
-                                    hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
-                                    Omega_ci / Tnorm;
-                  R_ex_C = Ne_C * Nn_C *
-                                    hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
-                                    Omega_ci / Tnorm;
-                  R_ex_R = Ne_R * Nn_R *
-                                    hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
-                                    Omega_ci / Tnorm;
-                  
+              }
+              
+              if (ex_rate=="population") {
+                // Calculate excitation rate based on Yulin Zhou's approach (Zhou 2022)
+                // Take AMJUEL rates H.12 2.1.5b through to 2.1.5e. These give you populations of excited states
+                // These are in the format Nn (excited state) / Nn (ground state) and provide up to 6th state
+                // Then use einstein coefficients from Yacora to calculate the radiation. See the paper for details.
                 
-                  Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
-                                 (6. * J_C);
-                }
+                // Energy gap between different levels in H atom in units of [eV]
+                BoutReal E_21=10.2,E_31=12.1,E_41=12.8,E_51=13.05,E_61=13.22;
+                
+                // Einstein coefficients in units of [s-1]
+                // http://astronomy.nmsu.edu/cwc/CWC/545/13-AtomsHydrogenic.pdf
+                // NOTE THAT A21 IS FROM YULIN'S SD1D CODE BUT SEEMS NOT CORRECT
+                BoutReal A21=1.6986e+09,A31=5.5751e7,A41=1.2785e7,A51=4.1250e6,A61=1.6440e6;
+                
+                BoutReal R2_L = Nn_L * hydrogen.Channel_H_2_amjuel(Te_L * Tnorm, Ne_L * Nnorm)*A21*E_21 / Omega_ci / Tnorm;
+                BoutReal R3_L = Nn_L * hydrogen.Channel_H_3_amjuel(Te_L * Tnorm, Ne_L * Nnorm)*A31*E_31 / Omega_ci / Tnorm;
+                BoutReal R4_L = Nn_L * hydrogen.Channel_H_4_amjuel(Te_L * Tnorm, Ne_L * Nnorm)*A41*E_41 / Omega_ci / Tnorm;
+                BoutReal R5_L = Nn_L * hydrogen.Channel_H_5_amjuel(Te_L * Tnorm, Ne_L * Nnorm)*A51*E_51 / Omega_ci / Tnorm;
+                BoutReal R6_L = Nn_L * hydrogen.Channel_H_6_amjuel(Te_L * Tnorm, Ne_L * Nnorm)*A61*E_61 / Omega_ci / Tnorm;
+                R_ex_L = R2_L + R3_L + R4_L + R5_L + R6_L;
+                
+                BoutReal R2_C = Nn_C * hydrogen.Channel_H_2_amjuel(Te_C * Tnorm, Ne_C * Nnorm)*A21*E_21 / Omega_ci / Tnorm;
+                BoutReal R3_C = Nn_C * hydrogen.Channel_H_3_amjuel(Te_C * Tnorm, Ne_C * Nnorm)*A31*E_31 / Omega_ci / Tnorm;
+                BoutReal R4_C = Nn_C * hydrogen.Channel_H_4_amjuel(Te_C * Tnorm, Ne_C * Nnorm)*A41*E_41 / Omega_ci / Tnorm;
+                BoutReal R5_C = Nn_C * hydrogen.Channel_H_5_amjuel(Te_C * Tnorm, Ne_C * Nnorm)*A51*E_51 / Omega_ci / Tnorm;
+                BoutReal R6_C = Nn_C * hydrogen.Channel_H_6_amjuel(Te_C * Tnorm, Ne_C * Nnorm)*A61*E_61 / Omega_ci / Tnorm;
+                R_ex_C = R2_C + R3_C + R4_C + R5_C + R6_C;
+                
+                BoutReal R2_R = Nn_R * hydrogen.Channel_H_2_amjuel(Te_R * Tnorm, Ne_R * Nnorm)*A21*E_21 / Omega_ci / Tnorm;
+                BoutReal R3_R = Nn_R * hydrogen.Channel_H_3_amjuel(Te_R * Tnorm, Ne_R * Nnorm)*A31*E_31 / Omega_ci / Tnorm;
+                BoutReal R4_R = Nn_R * hydrogen.Channel_H_4_amjuel(Te_R * Tnorm, Ne_R * Nnorm)*A41*E_41 / Omega_ci / Tnorm;
+                BoutReal R5_R = Nn_R * hydrogen.Channel_H_5_amjuel(Te_R * Tnorm, Ne_R * Nnorm)*A51*E_51 / Omega_ci / Tnorm;
+                BoutReal R6_R = Nn_R * hydrogen.Channel_H_6_amjuel(Te_R * Tnorm, Ne_R * Nnorm)*A61*E_61 / Omega_ci / Tnorm;
+                R_ex_R = R2_R + R3_R + R4_R + R5_R + R6_R;
+                
+                Rex(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
+                               
+              if (atomic_debug) {							 
+                // Calculate Rex the SD1D default way (HYDHEL H.2 2.1.5)
+                R_ex_L = Ne_L * Nn_L *
+                                  hydrogen.excitation_old(Te_L * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_C = Ne_C * Nn_C *
+                                  hydrogen.excitation_old(Te_C * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                R_ex_R = Ne_R * Nn_R *
+                                  hydrogen.excitation_old(Te_R * Tnorm) * Nnorm /
+                                  Omega_ci / Tnorm;
+                
+              
+                Rex_compare(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
+                               (6. * J_C);
+              }
               } else {
                 // Calculate the SD1D default way
                 R_ex_L = Ne_L * Nn_L *
