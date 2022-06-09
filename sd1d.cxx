@@ -359,6 +359,14 @@ protected:
         if (dn_debug) {
             SAVE_REPEAT4(dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n);
         }
+        // Save custom S and R rates
+        if (s_file != "none") {
+          SAVE_REPEAT4(S_rate, S_rate_C, S_rate_L, S_rate_R);
+          SAVE_REPEAT3(Ne_C, Ne_L, Ne_R);
+        }
+        if (r_file != "none") {
+          SAVE_REPEAT(R_rate);
+        }
       }
 
       SAVE_REPEAT(Vi);
@@ -378,7 +386,7 @@ protected:
       SAVE_REPEAT(eta_i);
 
     kappa_epar = 0.0;
-
+    S = 0.0;
     Srec = 0.0;
     Siz = 0.0;
     Frec = 0.0;
@@ -390,6 +398,7 @@ protected:
     Riz = 0.0;
     Rzrad = 0.0;
     Rex = 0.0;
+    R = 0.0;
     Erec = 0.0;
     Eiz = 0.0;
     Ecx = 0.0;
@@ -403,26 +412,26 @@ protected:
     dn_sigma_iz = 0.0;
     dn_sigma_nn = 0.0;
     dn_vth_n = 0.0;
+    Ne_C = 0.0;
+    Ne_L = 0.0;
+    Ne_R = 0.0;
     
     // If a file name has been provided, read S from a netCDF file.
     // S_rate needs to be normalised S divided by normalised Nn and normalised Ne.
     if (s_file != "none"){
       Options fields_in = OptionsNetCDF(s_file).read();
-      S = fields_in["S"].as<Field3D>();
-      S_rate = S; // If I set this equal to fields_in i get a mem out of bounds... have to do it this way
-      
+      S_rate = fields_in["S"].as<Field3D>();
     } else {
-      S = 0;
+      S_rate = 0.0;
     }
     
     // If a file name has been provided, read R from a netCDF file.
     // R_rate needs to be normalised S divided by normalised Nn and normalised Ne.
     if (r_file != "none"){
       Options fields_in = OptionsNetCDF(r_file).read();
-      R = fields_in["R"].as<Field3D>();
-      R_rate = R; // If I set this equal to fields_in i get a mem out of bounds... have to do it this way
+      R_rate = fields_in["R"].as<Field3D>();
     } else {
-      R = 0;
+      R_rate = 0.0;
     }
     
     flux_ion = 0.0;
@@ -1041,9 +1050,11 @@ protected:
             BoutReal Te_C = Te(i, j, k),
                      Te_L = 0.5 * (Te(i, j - 1, k) + Te(i, j, k)),
                      Te_R = 0.5 * (Te(i, j, k) + Te(i, j + 1, k));
-            BoutReal Ne_C = Ne(i, j, k),
-                     Ne_L = 0.5 * (Ne(i, j - 1, k) + Ne(i, j, k)),
-                     Ne_R = 0.5 * (Ne(i, j, k) + Ne(i, j + 1, k));
+                     
+            Ne_C = Ne(i, j, k);
+            Ne_L = 0.5 * (Ne(i, j - 1, k) + Ne(i, j, k));
+            Ne_R = 0.5 * (Ne(i, j, k) + Ne(i, j + 1, k));
+            
             BoutReal Vi_C = Vi(i, j, k),
                      Vi_L = 0.5 * (Vi(i, j - 1, k) + Vi(i, j, k)),
                      Vi_R = 0.5 * (Vi(i, j, k) + Vi(i, j + 1, k));
@@ -1056,27 +1067,23 @@ protected:
             BoutReal Vn_C = Vn(i, j, k),
                      Vn_L = 0.5 * (Vn(i, j - 1, k) + Vn(i, j, k)),
                      Vn_R = 0.5 * (Vn(i, j, k) + Vn(i, j + 1, k));
+                     
+            // Imported rates 
+            // BoutReal S_rate_C, S_rate_L, S_rate_R;
+            // BoutReal R_rate_C, R_rate_L, R_rate_R;
+
+            S_rate_C = S_rate(i, j, k);
+            S_rate_L = 0.5 * (S_rate(i, j - 1, k) + S_rate(i, j, k));
+            S_rate_R = 0.5 * (S_rate(i, j, k) + S_rate(i, j + 1, k));
+                     
+            R_rate_C = R_rate(i, j, k);
+            R_rate_L = 0.5 * (R_rate(i, j - 1, k) + R_rate(i, j, k));
+            R_rate_R = 0.5 * (R_rate(i, j, k) + R_rate(i, j + 1, k));
 
             // Jacobian (Cross-sectional area)
             BoutReal J_C = coord->J(i, j),
                      J_L = 0.5 * (coord->J(i, j - 1) + coord->J(i, j)),
                      J_R = 0.5 * (coord->J(i, j) + coord->J(i, j + 1));
-                     
-            // Imported rates 
-            BoutReal S_rate_C, S_rate_L, S_rate_R;
-            BoutReal R_rate_C, R_rate_L, R_rate_R;
-            
-            if (s_file != "none") {
-              S_rate_C = S_rate(i, j, k),
-              S_rate_L = 0.5 * (S_rate(i, j - 1, k) + S_rate(i, j, k)),
-              S_rate_R = 0.5 * (S_rate(i, j, k) + S_rate(i, j + 1, k));
-            }
-            
-            if (r_file != "none") {
-              R_rate_C = R_rate(i, j, k),
-              R_rate_L = 0.5 * (R_rate(i, j - 1, k) + R_rate(i, j, k)),
-              R_rate_R = 0.5 * (R_rate(i, j, k) + R_rate(i, j + 1, k));
-            }
 
             ///////////////////////////////////////
             // Charge exchange
@@ -1181,19 +1188,19 @@ protected:
 
             if (ionisation) {
               BoutReal R_iz_L, R_iz_C, R_iz_R;
-              
-              // Custom rate imported from file
+            
+            // Custom rate imported from file
               if (s_file != "none") {
-                R_iz_L = Ne_L * Nn_L * S_rate_L;
-                R_iz_C = Ne_C * Nn_C * S_rate_C;
-                R_iz_R = Ne_R * Nn_R * S_rate_R;
+                R_iz_L = Ne_L * Nn_L * -S_rate_L;
+                R_iz_C = Ne_C * Nn_C * -S_rate_C;
+                R_iz_R = Ne_R * Nn_R * -S_rate_R;
                 
                 S(i, j, k) =
                   -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
                   (6. * J_C);
-                
+                  
               } else {
-
+                
                 if (iz_rate == "solkit") {
                   R_iz_L = Ne_L * Nn_L *
                                     hydrogen.ionisation(Ne_L * Nnorm, Te_L * Tnorm) * Nnorm /
@@ -1318,9 +1325,9 @@ protected:
                 
                 R(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                  (6. * J_C);
-                
+                                 
               } else {
-
+                                 
                 if (ex_rate=="solkit") {
                   R_ex_L = Ne_L * Nn_L *
                                     (hydrogen.excitation(Ne_L * Nnorm, Te_L * Tnorm) - hydrogen.ionisation(1e8*1e6, Te_L * Tnorm) * 13.6) * Nnorm /
@@ -1463,6 +1470,7 @@ protected:
             ASSERT3(finite(E(i, j, k)));
             ASSERT3(finite(F(i, j, k)));
             ASSERT3(finite(S(i, j, k)));
+            ASSERT3(finite(S_rate(i, j, k)));
           }
 
       if (!evolve_nvn && neutral_f_pn) {
@@ -2079,6 +2087,9 @@ private:
   std::string s_file;
   std::string r_file;
   Field3D S_rate, R_rate;
+  BoutReal S_rate_L, S_rate_C, S_rate_R;
+  BoutReal R_rate_L, R_rate_C, R_rate_R;
+  BoutReal Ne_L, Ne_C, Ne_R;
   
   bool cfl_info; // Print additional information on CFL limits
 
