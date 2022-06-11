@@ -718,7 +718,7 @@ protected:
       }
       case 3: {
         // Exponential interpolation (like in SOL-KiT and Hermes-3)
-        Nout = Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend - 1, jz);
+        Nout = Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend, jz) / Ne(r.ind, mesh->yend - 1, jz);
         break;
       }
       default:
@@ -760,7 +760,7 @@ protected:
       }
       case 3: {
         // Exponential interpolation (like in Hermes-3). SOL-KiT has zero gradient on T (and therefore P)
-        Nout = Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend - 1, jz);
+        Nout = Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend, jz) / Ne(r.ind, mesh->yend - 1, jz);
         break;
       }
       default:
