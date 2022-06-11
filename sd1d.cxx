@@ -363,6 +363,7 @@ protected:
         if (s_file != "none") {
           SAVE_REPEAT4(S_rate, S_rate_C, S_rate_L, S_rate_R);
           SAVE_REPEAT3(Ne_C, Ne_L, Ne_R);
+          SAVE_REPEAT3(Nn_C, Nn_L, Nn_R);
         }
         if (r_file != "none") {
           SAVE_REPEAT(R_rate);
@@ -415,6 +416,9 @@ protected:
     Ne_C = 0.0;
     Ne_L = 0.0;
     Ne_R = 0.0;
+    Nn_C = 0.0;
+    Nn_L = 0.0;
+    Nn_R = 0.0;
     
     // If a file name has been provided, read S from a netCDF file.
     // S_rate needs to be normalised S divided by normalised Nn and normalised Ne.
@@ -1061,9 +1065,9 @@ protected:
             BoutReal Tn_C = Tn(i, j, k),
                      Tn_L = 0.5 * (Tn(i, j - 1, k) + Tn(i, j, k)),
                      Tn_R = 0.5 * (Tn(i, j, k) + Tn(i, j + 1, k));
-            BoutReal Nn_C = Nnlim2(i, j, k),
-                     Nn_L = 0.5 * (Nnlim2(i, j - 1, k) + Nnlim2(i, j, k)),
-                     Nn_R = 0.5 * (Nnlim2(i, j, k) + Nnlim2(i, j + 1, k));
+            Nn_C = Nnlim2(i, j, k);
+            Nn_L = 0.5 * (Nnlim2(i, j - 1, k) + Nnlim2(i, j, k));
+            Nn_R = 0.5 * (Nnlim2(i, j, k) + Nnlim2(i, j + 1, k));
             BoutReal Vn_C = Vn(i, j, k),
                      Vn_L = 0.5 * (Vn(i, j - 1, k) + Vn(i, j, k)),
                      Vn_R = 0.5 * (Vn(i, j, k) + Vn(i, j + 1, k));
@@ -1191,9 +1195,9 @@ protected:
             
             // Custom rate imported from file
               if (s_file != "none") {
-                R_iz_L = Ne_L * Nn_L * -S_rate_L;
-                R_iz_C = Ne_C * Nn_C * -S_rate_C;
-                R_iz_R = Ne_R * Nn_R * -S_rate_R;
+                R_iz_L = Ne_L * -S_rate_L;
+                R_iz_C = Ne_C * -S_rate_C;
+                R_iz_R = Ne_R * -S_rate_R;
                 
                 S(i, j, k) =
                   -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
@@ -1319,9 +1323,9 @@ protected:
               // Get R from file. R_rate is the TOTAL R corresponding to SD1D's "R" but divided by
               // normalised Ne and Nn. Now we have to multiply it again.
               if (r_file != "none") {
-                R_ex_L = Ne_L * Nn_L * R_rate_L;
-                R_ex_C = Ne_C * Nn_C * R_rate_C;
-                R_ex_R = Ne_R * Nn_R * R_rate_R;
+                R_ex_L = Ne_L * R_rate_L;
+                R_ex_C = Ne_C * R_rate_C;
+                R_ex_R = Ne_R * R_rate_R;
                 
                 R(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                  (6. * J_C);
@@ -2090,6 +2094,7 @@ private:
   BoutReal S_rate_L, S_rate_C, S_rate_R;
   BoutReal R_rate_L, R_rate_C, R_rate_R;
   BoutReal Ne_L, Ne_C, Ne_R;
+  BoutReal Nn_L, Nn_C, Nn_R;
   
   bool cfl_info; // Print additional information on CFL limits
 
