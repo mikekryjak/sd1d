@@ -1195,9 +1195,9 @@ protected:
             
             // Custom rate imported from file
               if (s_file != "none") {
-                R_iz_L = Ne_L * -S_rate_L;
-                R_iz_C = Ne_C * -S_rate_C;
-                R_iz_R = Ne_R * -S_rate_R;
+                R_iz_L = Ne_L * Nn_L * -S_rate_L;
+                R_iz_C = Ne_C * Nn_C * -S_rate_C;
+                R_iz_R = Ne_R * Nn_R * -S_rate_R;
                 
                 S(i, j, k) =
                   -(J_L * R_iz_L + 4. * J_C * R_iz_C + J_R * R_iz_R) /
@@ -1323,9 +1323,9 @@ protected:
               // Get R from file. R_rate is the TOTAL R corresponding to SD1D's "R" but divided by
               // normalised Ne and Nn. Now we have to multiply it again.
               if (r_file != "none") {
-                R_ex_L = Ne_L * R_rate_L;
-                R_ex_C = Ne_C * R_rate_C;
-                R_ex_R = Ne_R * R_rate_R;
+                R_ex_L = Ne_L * Nn_L * R_rate_L;
+                R_ex_C = Ne_C * Nn_C * R_rate_C;
+                R_ex_R = Ne_R * Nn_R * R_rate_R;
                 
                 R(i, j, k) = (J_L * R_ex_L + 4. * J_C * R_ex_C + J_R * R_ex_R) /
                                  (6. * J_C);
