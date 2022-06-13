@@ -362,7 +362,7 @@ protected:
         }
         // Additional terms [MK]
         if (include_braginskii_rt) {
-            SAVE_REPEAT(Ert);
+            SAVE_REPEAT2(Ert, gradT);
         }
       }
 
@@ -1293,12 +1293,27 @@ protected:
               BoutReal gradT_L = 0.5 * (gradT(i, j - 1, k) + gradT(i, j, k));
               BoutReal gradT_R = 0.5 * (gradT(i, j, k) + gradT(i, j + 1, k));
                        
-              // This is heating, so sign is negative.
-              BoutReal E_rt_L = -Vi_L * 0.71 * Ne_L * gradT_L;
-              BoutReal E_rt_C = -Vi_C * 0.71 * Ne_C * gradT_C;
-              BoutReal E_rt_R = -Vi_R * 0.71 * Ne_R * gradT_R;
+              BoutReal E_rt_L = Vi_L * 0.71 * Ne_L * gradT_L;
+              BoutReal E_rt_C = Vi_C * 0.71 * Ne_C * gradT_C;
+              BoutReal E_rt_R = Vi_R * 0.71 * Ne_R * gradT_R;
+              
               
               Ert(i, j, k) = (J_L * E_rt_L + 4. * J_C * E_rt_C + J_R * E_rt_R) / (6. * J_C);
+              
+              for (RangeIterator r = mesh->iterateBndryUpperY(); !r.isDone(); r++) {
+                int jz = 0;
+                Ert(r.ind, mesh->yend-1, jz) = Ert(r.ind, mesh->yend-2, jz);
+                Ert(r.ind, mesh->yend, jz) = Ert(r.ind, mesh->yend-2, jz);
+              }
+              // Ert(i, mesh->yend, k) = Ert(i, mesh->yend-1, k);
+              // Ert(i, mesh->ystart, k) = Ert(i, mesh->yend-1, k);
+              
+              // Ert = -Vi * 0.71 * Ne * Grad_par(Te);
+              
+              if (double_radiation) {
+                // Need to double all heat sinks and sources, not just radiation.
+                Ert(i, j, k) = Ert(i, j, k) * 2;
+              }
             }
 
             if (excitation) {
