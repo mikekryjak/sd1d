@@ -352,13 +352,17 @@ protected:
           SAVE_REPEAT(Vn);
         }
 
-        /// Rate diagnostics
+        // Rate diagnostics [MK]
         if (atomic_debug) {
             SAVE_REPEAT2(Siz_compare, Rex_compare);
         }
-        // Neutral diffusion diagnostics
+        // Neutral diffusion diagnostics [MK]
         if (dn_debug) {
             SAVE_REPEAT4(dn_sigma_cx, dn_sigma_iz, dn_sigma_nn, dn_vth_n);
+        }
+        // Additional terms [MK]
+        if (include_braginskii_rt) {
+            SAVE_REPEAT(Ert);
         }
       }
 
@@ -1426,7 +1430,7 @@ protected:
             E(i, j, k) = Ecx(i, j, k)    // Charge exchange
                          + Erec(i, j, k) // Recombination
                          + Eiz(i, j, k)  // ionisation
-                         + Eel(i, j, k); // Elastic collisions
+                         + Eel(i, j, k)  // Elastic collisions
                          + Ert(i, j, k); // Braginskii RT [MK]
 
             // Total friction
