@@ -160,6 +160,7 @@ protected:
     OPTION(opt, tn_3ev, false); // Force neutral temperature to 3eV. This affects the Eiz channel.
     OPTION(opt, include_eiz, true); // Use this to suppress Eiz, an ion energy term. probably good idea when not evolving Tn.
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
+    OPTION(opt, include_braginskii_rt, false); // Include braginskii thermal friction R_T as Ert
     OPTION(opt, double_radiation, false); // Use this to double radiation terms. Used for matching SOLKiT by solving double everything to get a 2x electron energy equation
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
     OPTION(opt, f_mod, 1.0); // Multiplier on F, the momentum sink
@@ -362,6 +363,7 @@ protected:
       }
 
       SAVE_REPEAT(Vi);
+      SAVE_REPEAT(Te); // MK addition
     }
 
     if ( opt["output_ddt"].withDefault<bool>(false) ) {
@@ -403,6 +405,9 @@ protected:
     dn_sigma_iz = 0.0;
     dn_sigma_nn = 0.0;
     dn_vth_n = 0.0;
+    Te = 0.0;
+    Ert = 0.0;
+    gradT = 0.0;
     
     // If a file name has been provided, read S from a netCDF file.
     if (s_file != "none"){
@@ -503,7 +508,7 @@ protected:
 
     Vi = NVi / Ne;
 
-    Field3D Te = 0.5 * P / Ne; // Assuming Te = Ti
+    Te = 0.5 * P / Ne; // Assuming Te = Ti
 
     for (auto &i : Te.getRegion("RGN_NOBNDRY")) {
       if (Te[i] > 10.)
@@ -1274,6 +1279,23 @@ protected:
                               J_R * (Te_R - Tn_R) * R_el_R) /
                              (6. * J_C);
             }
+            
+            if (include_braginskii_rt) {
+              /////////////////////////////////////////////////////////
+              // Braginskii thermal electron-ion friction as plasma energy sink
+              gradT = Grad_par(Te);
+              
+              BoutReal gradT_C = gradT(i, j, k);
+              BoutReal gradT_L = 0.5 * (gradT(i, j - 1, k) + gradT(i, j, k));
+              BoutReal gradT_R = 0.5 * (gradT(i, j, k) + gradT(i, j + 1, k));
+                       
+              // This is heating, so sign is negative.
+              BoutReal E_rt_L = -Vi_L * 0.71 * Ne_L * gradT_L;
+              BoutReal E_rt_C = -Vi_C * 0.71 * Ne_C * gradT_C;
+              BoutReal E_rt_R = -Vi_R * 0.71 * Ne_R * gradT_R;
+              
+              Ert(i, j, k) = (J_L * E_rt_L + 4. * J_C * E_rt_C + J_R * E_rt_R) / (6. * J_C);
+            }
 
             if (excitation) {
               /////////////////////////////////////////////////////////
@@ -1405,6 +1427,7 @@ protected:
                          + Erec(i, j, k) // Recombination
                          + Eiz(i, j, k)  // ionisation
                          + Eel(i, j, k); // Elastic collisions
+                         + Ert(i, j, k); // Braginskii RT [MK]
 
             // Total friction
             F(i, j, k) = (Frec(i, j, k)   // Recombination
@@ -2039,10 +2062,14 @@ private:
   bool include_eiz;
   bool include_erec;
   bool double_radiation;
+  bool include_braginskii_rt;
+  Field3D Ert, gradT;
   BoutReal kappa_epar_mod;
   BoutReal f_mod;
   std::string s_file;
   std::string r_file;
+  Field3D Te;
+  // END MK additions
   
   bool cfl_info; // Print additional information on CFL limits
 
