@@ -169,6 +169,7 @@ protected:
     OPTION(opt, read_fcx_exc, false); // Read additional Fcx component from excited states from file?
     OPTION(opt, read_frec_sk, false); // Read recombination friction from file?
     OPTION(opt, read_f, false); // Read F from file?
+    OPTION(opt, read_dn, false); // Read Dn from file?
    
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -461,6 +462,13 @@ protected:
       F_sk = 0;
     }
     
+    if (read_dn) {
+      Options fields_in = OptionsNetCDF(s_file).read();
+      Dn_sk = fields_in["Dn"].as<Field3D>(); 
+    } else {
+      Dn_sk = 0;
+    }
+    
     flux_ion = 0.0;
 
     // Neutral gas diffusion and heat conduction
@@ -689,20 +697,27 @@ protected:
 
               // Neutral gas diffusion
               if (include_dneut) {
-          
-                if (dn_model=="solkit") {
-                  
-                  BoutReal vth_3ev = sqrt(2 * 3 * 1.60217662E-19 / (AA * 1.6726219e-27)) / Cs0; // sqrt(2Te[eV] * q_e [J/eV] / (2 * mass_p [kg])) = Vth [m/s]. Normalised by  Cs0[m/s]
-                  
-                  Dn(i, j, k) = dneut(i, j, k) * vth_3ev / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                
+                if (read_dn) {
+                  // Read Dn from file 
+                  Dn(i, j, k) = Dn_sk(i, j, k);
                   
                 } else {
-                  Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
-                  
-                  
+            
+                  if (dn_model=="solkit") {
+                    
+                    BoutReal vth_3ev = sqrt(2 * 3 * 1.60217662E-19 / (AA * 1.6726219e-27)) / Cs0; // sqrt(2Te[eV] * q_e [J/eV] / (2 * mass_p [kg])) = Vth [m/s]. Normalised by  Cs0[m/s]
+                    
+                    Dn(i, j, k) = dneut(i, j, k) * vth_3ev / (2 * ((8.8e-21*Nnorm*rho_s0) * (Nelim(i, j, k) + Nnlim(i, j, k)) + (3e-19*Nnorm*rho_s0) * Nelim(i, j, k)));
+                    
+                  } else {
+                    Dn(i, j, k) = dneut(i, j, k) * SQ(vth_n) / sigma;
+                    
+                    
+                  }
+                          // Neutral gas heat conduction
+                          kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
                 }
-                        // Neutral gas heat conduction
-                        kappa_n(i, j, k) = dneut(i, j, k) * Nnlim(i, j, k) * SQ(vth_n) / sigma;
               }
             }
 
@@ -2125,6 +2140,7 @@ private:
   bool read_fcx_exc;
   bool read_frec_sk;
   bool read_f;
+  bool read_dn;
   Field3D Ert, gradT;
   BoutReal kappa_epar_mod;
   BoutReal f_mod;
@@ -2132,6 +2148,7 @@ private:
   std::string r_file;
   Field3D Te;
   Field3D Fcx_exc, Frec_sk, F_sk;
+  Field3D Dn_sk;
   // END MK additions
   
   bool cfl_info; // Print additional information on CFL limits
