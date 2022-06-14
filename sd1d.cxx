@@ -168,6 +168,7 @@ protected:
     OPTION(opt, r_file, "none"); // Read R from file? If so, provide name of file using this option
     OPTION(opt, read_fcx_exc, false); // Read additional Fcx component from excited states from file?
     OPTION(opt, read_frec_sk, false); // Read recombination friction from file?
+    OPTION(opt, read_f, false); // Read F from file?
    
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -451,6 +452,13 @@ protected:
       Frec_sk = fields_in["Frec_sk"].as<Field3D>(); 
     } else {
       Frec_sk = 0;
+    }
+    
+    if (read_f) {
+      Options fields_in = OptionsNetCDF(s_file).read();
+      F_sk = fields_in["F"].as<Field3D>(); 
+    } else {
+      F_sk = 0;
     }
     
     flux_ion = 0.0;
@@ -1469,15 +1477,23 @@ protected:
                          + Eiz(i, j, k)  // ionisation
                          + Eel(i, j, k)  // Elastic collisions
                          + Ert(i, j, k); // Braginskii RT [MK]
-
-            // Total friction
-            F(i, j, k) = (Frec(i, j, k)   // Recombination
-                         + Fiz(i, j, k)  // Ionisation
-                         + Fcx(i, j, k)  // Charge exchange
-                         + Fel(i, j, k)
-                         + Frec_sk(i, j, k)
-                         + Fcx_exc(i, j, k)) * f_mod; // Elastic collisions
-             
+            if (read_f) {
+                         // F is set to the imported value and others are zeroed [MK]
+                         F(i, j, k) = F_sk(i, j, k);
+                         Fiz(i, j, k) = 0;
+                         Fcx(i, j, k) = 0;
+                         Fel(i, j, k) = 0;
+                         Frec_sk(i, j, k) = 0;
+                         Fcx_exc(i, j, k) = 0;
+            } else {
+              // Total friction
+              F(i, j, k) = (Frec(i, j, k)   // Recombination
+                           + Fiz(i, j, k)  // Ionisation
+                           + Fcx(i, j, k)  // Charge exchange
+                           + Fel(i, j, k)
+                           + Frec_sk(i, j, k)
+                           + Fcx_exc(i, j, k)) * f_mod; // Elastic collisions
+            }
 
             // Total sink of plasma, source of neutrals
             // Compute only if we're not reading it from file [MK]
@@ -2108,13 +2124,14 @@ private:
   bool include_braginskii_rt;
   bool read_fcx_exc;
   bool read_frec_sk;
+  bool read_f;
   Field3D Ert, gradT;
   BoutReal kappa_epar_mod;
   BoutReal f_mod;
   std::string s_file;
   std::string r_file;
   Field3D Te;
-  Field3D Fcx_exc, Frec_sk;
+  Field3D Fcx_exc, Frec_sk, F_sk;
   // END MK additions
   
   bool cfl_info; // Print additional information on CFL limits
