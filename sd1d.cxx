@@ -166,6 +166,8 @@ protected:
     OPTION(opt, f_mod, 1.0); // Multiplier on F, the momentum sink
     OPTION(opt, s_file, "none"); // Read S from file? If so, provide name of file using this option
     OPTION(opt, r_file, "none"); // Read R from file? If so, provide name of file using this option
+    OPTION(opt, read_fcx_exc, false); // Read additional Fcx component from excited states from file?
+    OPTION(opt, read_frec_sk, false); // Read recombination friction from file?
    
     // Field factory for generating fields from strings
     FieldFactory ffact(mesh);
@@ -364,6 +366,12 @@ protected:
         if (include_braginskii_rt) {
             SAVE_REPEAT2(Ert, gradT);
         }
+        if (read_fcx_exc) {
+            SAVE_REPEAT(Fcx_exc);
+        }
+        if (read_frec_sk) {
+            SAVE_REPEAT(Frec_sk);
+        }
       }
 
       SAVE_REPEAT(Vi);
@@ -429,6 +437,20 @@ protected:
       
     } else {
       R = 0;
+    }
+    
+    if (read_fcx_exc) {
+      Options fields_in = OptionsNetCDF(s_file).read();
+      Fcx_exc = fields_in["Fcx_exc"].as<Field3D>(); 
+    } else {
+      Fcx_exc = 0;
+    }
+    
+    if (read_frec_sk) {
+      Options fields_in = OptionsNetCDF(s_file).read();
+      Frec_sk = fields_in["Frec_sk"].as<Field3D>(); 
+    } else {
+      Frec_sk = 0;
     }
     
     flux_ion = 0.0;
@@ -1452,7 +1474,9 @@ protected:
             F(i, j, k) = (Frec(i, j, k)   // Recombination
                          + Fiz(i, j, k)  // Ionisation
                          + Fcx(i, j, k)  // Charge exchange
-                         + Fel(i, j, k)) * f_mod; // Elastic collisions
+                         + Fel(i, j, k)
+                         + Frec_sk(i, j, k)
+                         + Fcx_exc(i, j, k)) * f_mod; // Elastic collisions
              
 
             // Total sink of plasma, source of neutrals
@@ -2082,12 +2106,15 @@ private:
   bool include_erec;
   bool double_radiation;
   bool include_braginskii_rt;
+  bool read_fcx_exc;
+  bool read_frec_sk;
   Field3D Ert, gradT;
   BoutReal kappa_epar_mod;
   BoutReal f_mod;
   std::string s_file;
   std::string r_file;
   Field3D Te;
+  Field3D Fcx_exc, Frec_sk;
   // END MK additions
   
   bool cfl_info; // Print additional information on CFL limits
