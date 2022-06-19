@@ -815,8 +815,8 @@ protected:
         break;
       }
       case 3: {
-        // Exponential interpolation (like in Hermes-3). SOL-KiT has zero gradient on T (and therefore P)
-        Nout = Ne(r.ind, mesh->yend, jz) * Ne(r.ind, mesh->yend, jz) / Ne(r.ind, mesh->yend - 1, jz);
+        // SOLKIT method: zero gradient T (so we use last cell) and Nout which is exponentially extrapolated
+        Pout = 2.0 * Te(r.ind, mesh->yend, jz) * Nout;
         break;
       }
       default:
