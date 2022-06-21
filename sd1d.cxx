@@ -161,6 +161,7 @@ protected:
     OPTION(opt, include_eiz, true); // Use this to suppress Eiz, an ion energy term. probably good idea when not evolving Tn.
     OPTION(opt, include_erec, true); // Use this to suppress Erec, an ion energy term. I used this to mod SD1D into solving an electron energy equation times 2.
     OPTION(opt, include_braginskii_rt, false); // Include braginskii thermal friction R_T as Ert
+    OPTION(opt, dn_cx_only, false); // Neutral diffusion only uses CX contribution.
     OPTION(opt, kappa_epar_mod, 1.0); // Multiplier on plasma conductivity
     OPTION(opt, f_mod, 1.0); // Multiplier on F, the momentum sink
     OPTION(opt, e_mod, 1.0); // Multiplier on all energy sinks
@@ -688,7 +689,13 @@ protected:
               BoutReal sigma_nn = vth_n / lambda_nn;
 
               // Total neutral collision frequency
-              BoutReal sigma = sigma_cx + sigma_iz + sigma_nn;
+              BoutReal sigma;
+              // Can set it to only use the CX contribution.
+              if (dn_cx_only) {
+                sigma = sigma_cx;
+              } else {
+                sigma = sigma_cx + sigma_iz + sigma_nn;
+              }
               
               if (dn_debug) {
                 dn_sigma_cx(i, j, k) = sigma_cx;
@@ -2141,6 +2148,7 @@ private:
   bool read_fcx_exc;
   bool read_frec_sk;
   bool read_s, read_r, read_f, read_dn;
+  bool dn_cx_only; 
   Field3D Ert, gradT;
   BoutReal kappa_epar_mod;
   BoutReal f_mod, e_mod, s_mod;
