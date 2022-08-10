@@ -1687,7 +1687,9 @@ protected:
             Div_Q_SH /= Tnorm * Nnorm * Omega_ci;
 
             // Add to pressure equation
-            ddt(P) -= (2. / 3) * Div_Q_SNB;
+            // [MK] multiply by conductivity factor so if we want double the conductivity
+            // then SNB results get scaled too
+            ddt(P) -= (2. / 3) * Div_Q_SNB * kappa_epar_mod;
           } else {
             // The standard Spitzer-Harm model
             ddt(P) += (2. / 3) * Div_par_diffusion_upwind(kappa_epar, Te);
