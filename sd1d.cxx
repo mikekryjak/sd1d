@@ -1679,7 +1679,10 @@ protected:
             // Note: Te in eV, Ne in Nnorm
             Field2D dy_orig = mesh->getCoordinates()->dy;
             mesh->getCoordinates()->dy *= rho_s0; // Convert distances to m
-            Div_Q_SNB = snb->divHeatFlux(Te * Tnorm, Ne * Nnorm, &Div_Q_SH);
+
+            // [MK] multiply by conductivity factor so if we want double the conductivity
+            // then SNB results get scaled too
+            Div_Q_SNB = snb->divHeatFlux(Te * Tnorm, Ne * Nnorm, &Div_Q_SH) * kappa_epar_mod;
             mesh->getCoordinates()->dy = dy_orig;
             
             // Normalise from eV/m^3/s
@@ -1687,8 +1690,6 @@ protected:
             Div_Q_SH /= Tnorm * Nnorm * Omega_ci;
 
             // Add to pressure equation
-            // [MK] multiply by conductivity factor so if we want double the conductivity
-            // then SNB results get scaled too
             ddt(P) -= (2. / 3) * Div_Q_SNB * kappa_epar_mod;
           } else {
             // The standard Spitzer-Harm model
